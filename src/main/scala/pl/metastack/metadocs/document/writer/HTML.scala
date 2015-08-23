@@ -105,12 +105,12 @@ object HTML {
   }
 
   val sbt = WebWriter[tree.Sbt] { sbt =>
-    if (sbt.hidden) web.tree.PlaceholderSeqNode(Seq())  // TODO Introduce web.tree.Null
+    if (sbt.hidden) web.tree.Null
     else html"""<pre class="sourceCode scala"><code>${sbt.code}</code></pre>"""
   }
 
   val scala = WebWriter[tree.Scala] { scala =>
-    if (scala.hidden) web.tree.PlaceholderSeqNode(Seq())
+    if (scala.hidden) web.tree.Null
     else {
       val code = html"""<pre class="sourceCode scala"><code>${scala.code}</code></pre>"""
       val result = scala.result.map { result =>
@@ -194,7 +194,7 @@ object HTMLDocument {
         <p class="affilation"><em>${m.affiliation}</em></p>
       </header>
       """
-    }.getOrElse(web.tree.PlaceholderSeqNode(Seq.empty))
+    }.getOrElse(web.tree.Null)
 
     val title = meta.map(_.title).getOrElse("")
     val language = meta.map(_.language).getOrElse("en-GB")
