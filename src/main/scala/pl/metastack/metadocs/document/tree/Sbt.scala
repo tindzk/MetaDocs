@@ -7,5 +7,5 @@ case class Sbt(id: String,
   override def text: String = code
   def children: Seq[Node] = Seq.empty
   def block: Boolean = true
-  def map(f: Node => Node): Node = this
+  def map(f: Node => Node): Node = f(this)
 }

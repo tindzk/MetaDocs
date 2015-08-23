@@ -156,16 +156,12 @@ class SbtScala(projectsPath: String) {
   }
 
   def embedOutput(root: tree.Root): tree.Root = {
-    def embed(node: tree.Node): tree.Node = {
-      node match {
-        case scala: tree.Scala if scala.project.isDefined && scala.printResult =>
-          val path = new File(listingPath(scala))
-          scala.copy(result = Some(io.Source.fromFile(path).mkString))
+    root.map {
+      case scala: tree.Scala if scala.project.isDefined && scala.printResult =>
+        val path = new File(listingPath(scala))
+        scala.copy(result = Some(io.Source.fromFile(path).mkString))
 
-        case node: tree.Node => node.map(embed)
-      }
-    }
-
-    embed(root).asInstanceOf[tree.Root]
+      case node: tree.Node => node
+    }.asInstanceOf[tree.Root]
   }
 }

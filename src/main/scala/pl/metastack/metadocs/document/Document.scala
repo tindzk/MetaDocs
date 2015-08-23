@@ -6,6 +6,7 @@ import pl.metastack.metadocs._
 import pl.metastack.metadocs.input.InstructionSet
 import pl.metastack.metadocs.input.tree.Root
 
+import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object Document {
@@ -28,6 +29,34 @@ object Document {
       }
     )
 
+  def uniqueIds(root: tree.Root): tree.Root = {
+    val collectedIds = mutable.HashMap.empty[String, Int]
+
+    def rename(optId: Option[String]): Option[String] = {
+      optId.map { id =>
+        if (!collectedIds.isDefinedAt(id)) {
+          collectedIds += (id -> 0)
+          id
+        } else {
+          collectedIds(id) += 1
+          val renamedId = id + "-" + collectedIds(id)
+          println(s"[warn] ID '$id' exists already, renamed to '$renamedId'")
+          renamedId
+        }
+      }
+    }
+
+    root.map {
+      case tag @ tree.Chapter(id, caption, children @ _*) =>
+        tag.copy(id = rename(id))
+      case tag @ tree.Section(id, caption, children @ _*) =>
+        tag.copy(id = rename(id))
+      case tag @ tree.Subsection(id, caption, children @ _*) =>
+        tag.copy(id = rename(id))
+      case tag => tag
+    }.asInstanceOf[tree.Root]
+  }
+
   /**
    * @param generateId If the ID of a structural element (chapter, section etc.)
    *                   is missing, this function will be called with the caption.
@@ -36,14 +65,15 @@ object Document {
                      instructionSet: InstructionSet,
                      generateId: String => Option[String] = _ => None): tree.Root = {
     val conversion = new input.Conversion(instructionSet, generateId)
-    conversion.convertRoot(root)
+    val converted = conversion.convertRoot(root)
+    uniqueIds(converted)
   }
 
   def generateTOC(root: tree.Root, maxLevel: Int): TableOfContents = {
-    // TODO Verify that IDs in TOC are unique
     def heading(id: Option[String],
                 caption: String,
-                children: Seq[tree.Node], level: Int) =
+                children: Seq[tree.Node],
+                level: Int) =
       Some(
         Heading(
           caption = caption,
