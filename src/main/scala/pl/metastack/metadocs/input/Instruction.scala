@@ -258,6 +258,22 @@ case object Todo extends Instruction[document.tree.Todo] {
     document.tree.Todo(conversion.childrenOf(tag): _*)
 }
 
+case object Jump extends Instruction[document.tree.Jump] {
+  val ref = argument("ref", default = true)
+
+  override val name = "jump"
+
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Jump = {
+    val text = tag.text.trim
+
+    document.tree.Jump(
+      ref.getString(conversion, tag),
+      if (text.isEmpty) None else Some(text)
+    )
+  }
+}
+
 trait InstructionSet {
   val instructions: Set[Instruction[_]]
   val aliases: Map[String, Instruction[_]] = Map.empty
@@ -281,9 +297,9 @@ trait InstructionSet {
 }
 
 object DefaultInstructionSet extends InstructionSet {
-  override val instructions: Set[Instruction[_]] = Set(Abstract, Chapter,
-    Section, Subsection, Bold, Italic, Url, List, ListItem, Code, Image, Table,
-    Row, Column)
+  override val instructions: Set[Instruction[_]] = Set(
+    Abstract, Jump, Chapter, Section, Subsection, Bold, Italic, Url, List,
+    ListItem, Code, Image, Table, Row, Column)
 }
 
 object CodeInstructionSet extends InstructionSet {

@@ -32,7 +32,7 @@ object Document {
   def uniqueIds(root: tree.Root): tree.Root = {
     val collectedIds = mutable.HashMap.empty[String, Int]
 
-    def rename(optId: Option[String]): Option[String] = {
+    def rename(optId: Option[String]): Option[String] =
       optId.map { id =>
         if (!collectedIds.isDefinedAt(id)) {
           collectedIds += (id -> 0)
@@ -44,7 +44,6 @@ object Document {
           renamedId
         }
       }
-    }
 
     root.map {
       case tag @ tree.Chapter(id, caption, children @ _*) =>
@@ -57,6 +56,35 @@ object Document {
     }.asInstanceOf[tree.Root]
   }
 
+  def validateJumps(root: tree.Root): tree.Root = {
+    val idToCaption = mutable.HashMap.empty[String, String]
+
+    root.map {
+      case tag @ tree.Chapter(Some(id), caption, children @ _*) =>
+        idToCaption += (id -> caption)
+        tag
+      case tag @ tree.Section(Some(id), caption, children @ _*) =>
+        idToCaption += (id -> caption)
+        tag
+      case tag @ tree.Subsection(Some(id), caption, children @ _*) =>
+        idToCaption += (id -> caption)
+        tag
+      case tag => tag
+    }
+
+    root.map {
+      case tag @ tree.Jump(ref, caption) =>
+        if (!idToCaption.contains(ref)) {
+          println(s"[error] Invalid reference: $ref")
+          tree.Text(s"[$ref (invalid reference)]")
+        } else if (caption.isEmpty) {
+          tag.copy(caption = Some(idToCaption(ref)))
+        } else tag
+
+      case tag => tag
+    }.asInstanceOf[tree.Root]
+  }
+
   /**
    * @param generateId If the ID of a structural element (chapter, section etc.)
    *                   is missing, this function will be called with the caption.
@@ -65,8 +93,12 @@ object Document {
                      instructionSet: InstructionSet,
                      generateId: String => Option[String] = _ => None): tree.Root = {
     val conversion = new input.Conversion(instructionSet, generateId)
-    val converted = conversion.convertRoot(root)
-    uniqueIds(converted)
+    val pipeline =
+      (conversion.convertRoot _)
+        .andThen(uniqueIds)
+        .andThen(validateJumps)
+
+    pipeline(root)
   }
 
   def generateTOC(root: tree.Root, maxLevel: Int): TableOfContents = {

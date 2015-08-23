@@ -63,6 +63,11 @@ object HTML {
     html"""<p><small><strong>Abstract: </strong><em>${children(abstractNode)}</em></small></p>"""
   }
 
+  val jump = WebWriter[tree.Jump] { jump =>
+    val href = s"#${jump.ref}"
+    html"<a href=$href>${jump.caption.get}</a>"
+  }
+
   val bold = WebWriter[tree.Bold] { bold =>
     html"<b>${children(bold)}</b>"
   }
@@ -147,7 +152,7 @@ object HTML {
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
         abstractNode, list, listItem, code, url, image, bold, italic, todo,
-        shell, sbt, scala, chapter, section, subsection, paragraph, text
+        shell, sbt, scala, chapter, section, subsection, paragraph, text, jump
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
