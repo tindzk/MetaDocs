@@ -3,7 +3,8 @@ package pl.metastack.metadocs.document.writer
 import java.io.File
 
 import pl.metastack.metadocs.FileUtils
-import pl.metastack.metadocs.document.{Meta, Heading, TableOfContents, tree}
+import pl.metastack.metadocs.document.tree
+import pl.metastack.metadocs.document.{Meta, Heading, TableOfContents, Extractors}
 import pl.metastack.metarx.Var
 
 import pl.metastack.metaweb._
@@ -147,12 +148,21 @@ object HTML {
     web.tree.Text(Var(text.text))
   }
 
+  val footnote = WebWriter[tree.Footnote] { fn =>
+    val id = fn.id.get
+    val target = s"#fn$id"
+    val refId = s"fnref$id"
+    val idString = id.toString
+    html"""<a href=$target id=$refId class="footnote">[$idString]</a>"""
+  }
+
   val node: WebWriter[tree.Node] =
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
         abstractNode, list, listItem, code, url, image, bold, italic, todo,
-        shell, sbt, scala, chapter, section, subsection, paragraph, text, jump
+        shell, sbt, scala, chapter, section, subsection, paragraph, text, jump,
+        footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
@@ -196,6 +206,33 @@ object HTMLDocument {
       """
     }.getOrElse(web.tree.Null)
 
+    val footnotes = Extractors.footnotes(root)
+    val footnotesHtml =
+      if (footnotes.isEmpty) web.tree.Null
+      else {
+        val items = footnotes.map { fn =>
+          val id = fn.id.get
+          val fnId = s"fn$id"
+          val target = s"#fnref$id"
+
+          html"""
+            <li id=$fnId>
+              <p>
+                ${HTML.children(fn)}
+                <a href=$target class="reversefootnote">&#160;&#8617;</a>
+              </p>
+            </li>
+          """
+        }
+
+        html"""
+          <div class="footnotes">
+            <hr />
+            <ol>$items</ol>
+          </div>
+        """
+      }
+
     val title = meta.map(_.title).getOrElse("")
     val language = meta.map(_.language).getOrElse("en-GB")
 
@@ -215,6 +252,7 @@ object HTMLDocument {
           $header
           <nav id="toc">$tocHtml</nav>
           $documentHtml
+          $footnotesHtml
           <p><small>Generated with <a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>.</small></p>
         </div>
       </body>

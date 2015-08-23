@@ -274,6 +274,14 @@ case object Jump extends Instruction[document.tree.Jump] {
   }
 }
 
+case object Footnote extends Instruction[document.tree.Footnote] {
+  override val name = "footnote"
+
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Footnote =
+    document.tree.Footnote(None, conversion.childrenOf(tag): _*)
+}
+
 trait InstructionSet {
   val instructions: Set[Instruction[_]]
   val aliases: Map[String, Instruction[_]] = Map.empty
@@ -298,8 +306,8 @@ trait InstructionSet {
 
 object DefaultInstructionSet extends InstructionSet {
   override val instructions: Set[Instruction[_]] = Set(
-    Abstract, Jump, Chapter, Section, Subsection, Bold, Italic, Url, List,
-    ListItem, Code, Image, Table, Row, Column)
+    Abstract, Jump, Footnote, Chapter, Section, Subsection, Bold, Italic, Url,
+    List, ListItem, Code, Image, Table, Row, Column)
 }
 
 object CodeInstructionSet extends InstructionSet {

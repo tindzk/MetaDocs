@@ -85,6 +85,16 @@ object Document {
     }.asInstanceOf[tree.Root]
   }
 
+  def footnoteIds(root: tree.Root): tree.Root = {
+    var lastId = 0
+    root.map {
+      case tag @ tree.Footnote(id, children @ _*) =>
+        lastId += 1
+        tag.copy(Some(lastId))
+      case tag => tag
+    }.asInstanceOf[tree.Root]
+  }
+
   /**
    * @param generateId If the ID of a structural element (chapter, section etc.)
    *                   is missing, this function will be called with the caption.
@@ -97,6 +107,7 @@ object Document {
       (conversion.convertRoot _)
         .andThen(uniqueIds)
         .andThen(validateJumps)
+        .andThen(footnoteIds)
 
     pipeline(root)
   }
