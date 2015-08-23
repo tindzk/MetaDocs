@@ -194,17 +194,20 @@ object HTMLDocument {
     <!DOCTYPE html>
     <html lang="$language">
       <head>
+        <title>$title</title>
         <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="generator" content="MetaDocs" />
         <link rel="stylesheet" type="text/css" href=$cssPath />
-        <title>$title</title>
       </head>
 
       <body>
-        $header
-        <nav id="toc">$tocHtml</nav>
-        $documentHtml
-        <p><small>Generated with <a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>.</small></p>
+        <div id="wrapper">
+          $header
+          <nav id="toc">$tocHtml</nav>
+          $documentHtml
+          <p><small>Generated with <a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>.</small></p>
+        </div>
       </body>
     </html>
     """
