@@ -118,6 +118,10 @@ object HTML {
     }
   }
 
+  val shell = WebWriter[tree.Shell] { shell =>
+    html"""<pre class="sourceCode shell"><code>${shell.code}</code></pre>"""
+  }
+
   val todo = WebWriter[tree.Todo] { todo =>
     html"<div><b>Todo:</b> ${children(todo)}</div>"
   }
@@ -142,8 +146,8 @@ object HTML {
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
-        abstractNode, list, listItem, code, url, image, bold, italic, todo, sbt,
-        scala, chapter, section, subsection, paragraph, text
+        abstractNode, list, listItem, code, url, image, bold, italic, todo,
+        shell, sbt, scala, chapter, section, subsection, paragraph, text
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
@@ -196,7 +200,7 @@ object HTMLDocument {
       <head>
         <title>$title</title>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="generator" content="MetaDocs" />
         <link rel="stylesheet" type="text/css" href=$cssPath />
       </head>

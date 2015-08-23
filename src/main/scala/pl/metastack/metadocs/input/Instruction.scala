@@ -240,6 +240,16 @@ case object Sbt extends Instruction[document.tree.Sbt] {
       conversion.reindent(tag.text))
 }
 
+case object Shell extends Instruction[document.tree.Shell] {
+  override val name = "shell"
+
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Shell =
+    document.tree.Shell(
+      conversion.listingId(),
+      conversion.reindent(tag.text))
+}
+
 case object Todo extends Instruction[document.tree.Todo] {
   override val name = "todo"
 
@@ -276,8 +286,8 @@ object DefaultInstructionSet extends InstructionSet {
     Row, Column)
 }
 
-object ScalaInstructionSet extends InstructionSet {
-  override val instructions: Set[Instruction[_]] = Set(Scala, Sbt)
+object CodeInstructionSet extends InstructionSet {
+  override val instructions: Set[Instruction[_]] = Set(Scala, Sbt, Shell)
 }
 
 object DraftInstructionSet extends InstructionSet {
