@@ -138,6 +138,15 @@ case object Code extends Instruction[document.tree.Code] {
     document.tree.Code(conversion.childrenOf(tag): _*)
 }
 
+case object Image extends Instruction[document.tree.Image] {
+  val href = argument("href", default = true)
+
+  override val name = "image"
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Image =
+    document.tree.Image(href.getString(conversion, tag))
+}
+
 case object List extends Instruction[document.tree.List] {
   override val name = "list"
   override def documentNode(conversion: Conversion,
@@ -263,8 +272,8 @@ trait InstructionSet {
 
 object DefaultInstructionSet extends InstructionSet {
   override val instructions: Set[Instruction[_]] = Set(Abstract, Chapter,
-    Section, Subsection, Bold, Italic, Url, List, ListItem, Code, Table, Row,
-    Column)
+    Section, Subsection, Bold, Italic, Url, List, ListItem, Code, Image, Table,
+    Row, Column)
 }
 
 object ScalaInstructionSet extends InstructionSet {

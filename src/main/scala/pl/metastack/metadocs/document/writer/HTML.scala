@@ -126,6 +126,10 @@ object HTML {
     html"<a href=${url.href}>${children(url)}</a>"
   }
 
+  val image = WebWriter[tree.Image] { image =>
+    html"<img src=${image.href} />"
+  }
+
   val paragraph = WebWriter[tree.Paragraph] { paragraph =>
     html"<p>${children(paragraph)}</p>"
   }
@@ -138,8 +142,8 @@ object HTML {
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
-        abstractNode, list, listItem, code, url, bold, italic, todo, sbt, scala,
-        chapter, section, subsection, paragraph, text
+        abstractNode, list, listItem, code, url, image, bold, italic, todo, sbt,
+        scala, chapter, section, subsection, paragraph, text
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
