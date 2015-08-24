@@ -1,39 +1,12 @@
-package pl.metastack.metadocs.document.writer
+package pl.metastack.metadocs.document.writer.html
 
-import java.io.File
-
-import pl.metastack.metadocs.FileUtils
 import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.{Meta, Heading, TableOfContents, Extractors}
 import pl.metastack.metarx.Var
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
-import scala.reflect.ClassTag
-
-trait WebWriter[N <: tree.Node] extends Writer[N, web.tree.Node]
-
-object WebWriter {
-  def apply[N <: tree.Node](f: N => web.tree.Node)
-                           (implicit ct: ClassTag[N]): WebWriter[N] =
-    new WebWriter[N] {
-      def write: PartialFunction[N, web.tree.Node] = {
-        case node: N => f(node)
-      }
-    }
-
-  def combine[N <: tree.Node](writer: WebWriter[N],
-              writers: WebWriter[N]*): WebWriter[N] =
-    new WebWriter[N] {
-      def write: PartialFunction[N, web.tree.Node] =
-        writers.foldLeft(writer.write) { (acc, cur) =>
-          acc.orElse(cur.write)
-        }
-    }
-}
-
-object HTML {
+object Writers {
   def children(n: tree.Node) = n.children.map(node.write)
 
   val headerColumn = WebWriter[tree.Column] { column =>
@@ -167,100 +140,5 @@ object HTML {
 
   val root = WebWriter[tree.Root] { root =>
     web.tree.PlaceholderSeqNode(root.children.map(node.write))
-  }
-}
-
-object HTMLDocument {
-  def write(root: tree.Root,
-            outputPath: String,
-            cssPath: Option[String],
-            meta: Option[Meta],
-            toc: Option[TableOfContents]) {
-    def iterateToc(node: Heading): web.tree.Node =
-      node match {
-        case Heading(caption, id, children) =>
-          val childrenHtml = children.map { child =>
-            html"<ul>${iterateToc(child)}</ul>"
-          }
-
-          val idAnchor = id.map(a => s"#$a")
-          html"<li><a href=$idAnchor>$caption</a>$childrenHtml</li>"
-      }
-
-    val tocHtml = toc.map { t =>
-      t.children.map { child =>
-        html"""<ul>${iterateToc(child)}</ul>"""
-      }
-    }.getOrElse(Seq.empty)
-
-    val documentHtml = HTML.root.write(root)
-
-    val header = meta.map { m =>
-      html"""
-      <header>
-        <h3 class="date">${m.date}</h3>
-        <h1 class="title">${m.title}</h1>
-        <h2 class="author">${m.author}</h2>
-        <p class="affilation"><em>${m.affiliation}</em></p>
-      </header>
-      """
-    }.getOrElse(web.tree.Null)
-
-    val footnotes = Extractors.footnotes(root)
-    val footnotesHtml =
-      if (footnotes.isEmpty) web.tree.Null
-      else {
-        val items = footnotes.map { fn =>
-          val id = fn.id.get
-          val fnId = s"fn$id"
-          val target = s"#fnref$id"
-
-          html"""
-            <li id=$fnId>
-              <p>
-                ${HTML.children(fn)}
-                <a href=$target class="reversefootnote">&#160;&#8617;</a>
-              </p>
-            </li>
-          """
-        }
-
-        html"""
-          <div class="footnotes">
-            <hr />
-            <ol>$items</ol>
-          </div>
-        """
-      }
-
-    val title = meta.map(_.title).getOrElse("")
-    val language = meta.map(_.language).getOrElse("en-GB")
-
-    val result = html"""
-    <!DOCTYPE html>
-    <html lang="$language">
-      <head>
-        <title>$title</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="generator" content="MetaDocs" />
-        <link rel="stylesheet" type="text/css" href=$cssPath />
-      </head>
-
-      <body>
-        <div id="wrapper">
-          $header
-          <nav id="toc">$tocHtml</nav>
-          $documentHtml
-          $footnotesHtml
-          <p><small>Generated with <a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>.</small></p>
-        </div>
-      </body>
-    </html>
-    """
-
-    FileUtils.printToFile(new File(outputPath)) { fw =>
-      fw.write(result.toHtml)
-    }
   }
 }
