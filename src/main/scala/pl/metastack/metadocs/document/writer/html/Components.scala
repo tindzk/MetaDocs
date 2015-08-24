@@ -1,34 +1,42 @@
 package pl.metastack.metadocs.document.writer.html
 
-import pl.metastack.metadocs.document.{Meta, tree, Heading, TableOfContents}
+import pl.metastack.metadocs.document.{tree, Meta}
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object Components {
-  def toc(tableOfContents: Option[TableOfContents]): web.tree.Node = {
-    def iterate(node: Heading): web.tree.Node =
-      node match {
-        case Heading(caption, id, children) =>
-          val childrenHtml = children.map { child =>
-            html"<ul>${iterate(child)}</ul>"
-          }
+  def toc(root: tree.Root,
+          maxDepth: Int,
+          referenceUrl: String => String): web.tree.Node = {
+    def render(caption: String,
+               id: Option[String],
+               children: Seq[web.tree.Node]): web.tree.Node = {
+      val childrenHtml = children.map(child => html"<ul>$child</ul>")
 
-          val idAnchor = id.map(a => s"#$a")
-          html"<li><a href=$idAnchor>$caption</a>$childrenHtml</li>"
+      val url = id.map(referenceUrl)
+      html"<li><a href=$url>$caption</a>$childrenHtml</li>"
+    }
+
+    def iterate(node: tree.Node, depth: Int): Option[web.tree.Node] =
+      node match {
+        case _ if depth >= maxDepth => None
+        case tag @ tree.Chapter(id, caption, children @ _*) =>
+          Some(render(caption, id, children.flatMap(iterate(_, depth + 1))))
+        case tag @ tree.Section(id, caption, children @ _*) =>
+          Some(render(caption, id, children.flatMap(iterate(_, depth + 1))))
+        case tag @ tree.Subsection(id, caption, children @ _*) =>
+          Some(render(caption, id, children.flatMap(iterate(_, depth + 1))))
+        case _ => None
       }
 
-    tableOfContents.map { t =>
-      val children =
-        t.children.map { child =>
-          html"""<ul>${iterate(child)}</ul>"""
-        }
+    val toc = root.children.flatMap(iterate(_, 0))
 
-      html"""<nav id="toc">$children</nav>"""
-    }.getOrElse(web.tree.Null)
+    if (toc.isEmpty) web.tree.Null
+    else html"""<nav id="toc"><ul>$toc</ul></nav>"""
   }
 
-  def footnotes(footnotes: Seq[tree.Footnote]): web.tree.Node =
+  def footnotes(writer: Writer, footnotes: Seq[tree.Footnote]): web.tree.Node =
     if (footnotes.isEmpty) web.tree.Null
     else {
       val items = footnotes.map { fn =>
@@ -39,7 +47,7 @@ object Components {
         html"""
             <li id=$fnId>
               <p>
-                ${Writers.children(fn)}
+                ${writer.children(fn)}
                 <a href=$target class="reversefootnote">&#160;&#8617;</a>
               </p>
             </li>
@@ -65,6 +73,39 @@ object Components {
         </header>
         """
     }.getOrElse(web.tree.Null)
+
+  def navigationHeader(meta: Option[Meta],
+                       previous: Option[tree.Chapter],
+                       next: Option[tree.Chapter]): web.tree.Node = {
+    val previousHtml = previous.map { ch =>
+      val href = s"${ch.id.get}.html"
+      html"""<span>Previous chapter: <a href=$href>${ch.title}</a></span>"""
+    }.getOrElse(
+      html"""<a href="index.html">Table of contents</a>"""
+    )
+
+    val nextHtml = next.map { ch =>
+      val href = s"${ch.id.get}.html"
+      html"""<span>Next chapter: <a href=$href>${ch.title}</a></span>"""
+    }.getOrElse(web.tree.Null)
+
+    val separator =
+      if (previousHtml != web.tree.Null && nextHtml != web.tree.Null) " | "
+      else ""
+
+    val title =
+      meta.map { m =>
+        html"""
+          <header>
+            <h1 class="title">${m.title}</h1>
+          </header>
+          """
+      }.getOrElse(web.tree.Null)
+
+    web.tree.PlaceholderSeqNode(Seq(
+      title,
+      html"<nav>$previousHtml $separator $nextHtml</nav>"))
+  }
 
   def pageSkeleton(cssPath: Option[String],
                    meta: Option[Meta],

@@ -112,35 +112,6 @@ object Document {
     pipeline(root)
   }
 
-  def generateTOC(root: tree.Root, maxLevel: Int): TableOfContents = {
-    def heading(id: Option[String],
-                caption: String,
-                children: Seq[tree.Node],
-                level: Int) =
-      Some(
-        Heading(
-          caption = caption,
-          id = id,
-          children =
-            if (level + 1 < maxLevel) children.flatMap(iterate(_, level + 1))
-            else Seq.empty
-        )
-      )
-
-    def iterate(node: tree.Node, level: Int = 0): Option[Heading] =
-      node match {
-        case tag @ tree.Chapter(id, caption, children @ _*) =>
-          heading(id, caption, children, level)
-        case tag @ tree.Section(id, caption, children @ _*) =>
-          heading(id, caption, children, level)
-        case tag @ tree.Subsection(id, caption, children @ _*) =>
-          heading(id, caption, children, level)
-        case _ => None
-      }
-
-    TableOfContents(root.children.flatMap(iterate(_)))
-  }
-
   def printTodos(root: document.tree.Root) {
     def iterate(node: document.tree.Node) {
       node match {

@@ -1,13 +1,13 @@
 package pl.metastack.metadocs.document.writer.html
 
 import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.writer.Writer
+import pl.metastack.metadocs.document.writer
 
 import pl.metastack.{metaweb => web}
 
 import scala.reflect.ClassTag
 
-trait WebWriter[N <: tree.Node] extends Writer[N, web.tree.Node]
+trait WebWriter[N <: tree.Node] extends writer.Writer[N, web.tree.Node]
 
 object WebWriter {
   def apply[N <: tree.Node](f: N => web.tree.Node)

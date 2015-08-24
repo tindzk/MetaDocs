@@ -6,7 +6,7 @@ import pl.metastack.metarx.Var
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
-object Writers {
+class Writer(referenceUrl: String => String) {
   def children(n: tree.Node) = n.children.map(node.write)
 
   val headerColumn = WebWriter[tree.Column] { column =>
@@ -38,7 +38,7 @@ object Writers {
   }
 
   val jump = WebWriter[tree.Jump] { jump =>
-    val href = s"#${jump.ref}"
+    val href = referenceUrl(jump.ref)
     html"<a href=$href>${jump.caption.get}</a>"
   }
 

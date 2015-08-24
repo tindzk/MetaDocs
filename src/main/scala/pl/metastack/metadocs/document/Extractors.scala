@@ -3,7 +3,7 @@ package pl.metastack.metadocs.document
 import scala.collection.mutable
 
 object Extractors {
-  def footnotes(root: tree.Root): Seq[tree.Footnote] = {
+  def footnotes(root: tree.Node): Seq[tree.Footnote] = {
     val footnotes = mutable.ArrayBuffer.empty[tree.Footnote]
 
     // TODO Provide better way of iterating without change over the tree
@@ -16,4 +16,24 @@ object Extractors {
 
     footnotes
   }
+
+  def references(root: tree.Root): References = {
+    def iterate(node: tree.Node): Option[Reference] =
+      node match {
+        case tag @ tree.Chapter(id, caption, children @ _*) =>
+          Some(Reference(caption, id, children.flatMap(iterate)))
+        case tag @ tree.Section(id, caption, children @ _*) =>
+          Some(Reference(caption, id, children.flatMap(iterate)))
+        case tag @ tree.Subsection(id, caption, children @ _*) =>
+          Some(Reference(caption, id, children.flatMap(iterate)))
+        case _ => None
+      }
+
+    References(root.children.flatMap(iterate))
+  }
+
+  def chapters(root: tree.Node): Seq[tree.Chapter] =
+    root.children.collect {
+      case ch: tree.Chapter => ch
+    }
 }

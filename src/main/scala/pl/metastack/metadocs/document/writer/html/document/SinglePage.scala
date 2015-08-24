@@ -4,8 +4,8 @@ import java.io.File
 
 import pl.metastack.metadocs.FileUtils
 import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.writer.html.{Components, Writers}
-import pl.metastack.metadocs.document.{Meta, TableOfContents, Extractors}
+import pl.metastack.metadocs.document.writer.html.{Components, Writer}
+import pl.metastack.metadocs.document.{Meta, Extractors}
 
 import pl.metastack.{metaweb => web}
 
@@ -14,14 +14,18 @@ object SinglePage {
             outputPath: String,
             cssPath: Option[String],
             meta: Option[Meta],
-            toc: Option[TableOfContents]) {
+            toc: Boolean,
+            tocDepth: Int = 3) {
+    def referenceUrl(id: String) = s"#$id"
+    val writer = new Writer(referenceUrl)
+
     val footnotes = Extractors.footnotes(root)
 
     val body = web.tree.PlaceholderSeqNode(Seq(
       Components.header(meta),
-      Components.toc(toc),
-      Writers.root.write(root),
-      Components.footnotes(footnotes)
+      Components.toc(root, tocDepth, referenceUrl),
+      writer.root.write(root),
+      Components.footnotes(writer, footnotes)
     ))
 
     val result = Components.pageSkeleton(cssPath, meta, body)
