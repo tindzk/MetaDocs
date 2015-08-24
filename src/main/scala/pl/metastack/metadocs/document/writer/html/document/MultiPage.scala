@@ -16,10 +16,10 @@ object MultiPage {
                  meta: Option[Meta],
                  tocDepth: Int,
                  referenceUrl: String => String) {
-    // TODO Must include abstract
     val body = web.tree.PlaceholderSeqNode(Seq(
       Components.header(meta),
-      Components.toc(root, tocDepth, referenceUrl)
+      Components.toc(root, tocDepth, referenceUrl),
+      Components.`abstract`(meta)
     ))
 
     val result = Components.pageSkeleton(cssPath, meta, body)

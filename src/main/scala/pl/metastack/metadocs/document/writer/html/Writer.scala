@@ -33,10 +33,6 @@ class Writer(referenceUrl: String => String) {
     html"<table>$header$body</table>"
   }
 
-  val abstractNode = WebWriter[tree.Abstract] { abstractNode =>
-    html"""<p><small><strong>Abstract: </strong><em>${children(abstractNode)}</em></small></p>"""
-  }
-
   val jump = WebWriter[tree.Jump] { jump =>
     val href = referenceUrl(jump.ref)
     html"<a href=$href>${jump.caption.get}</a>"
@@ -133,9 +129,8 @@ class Writer(referenceUrl: String => String) {
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
-        abstractNode, list, listItem, code, url, image, bold, italic, todo,
-        shell, sbt, scala, chapter, section, subsection, paragraph, text, jump,
-        footnote
+        list, listItem, code, url, image, bold, italic, todo, shell, sbt, scala,
+        chapter, section, subsection, paragraph, text, jump, footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>

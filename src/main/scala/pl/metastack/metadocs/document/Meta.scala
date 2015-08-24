@@ -4,4 +4,5 @@ case class Meta(date: String,
                 title: String,
                 author: String,
                 affiliation: String,
+                `abstract`: String,
                 language: String)

@@ -71,7 +71,12 @@ object Components {
           <h2 class="author">${m.author}</h2>
           <p class="affilation"><em>${m.affiliation}</em></p>
         </header>
-        """
+      """
+    }.getOrElse(web.tree.Null)
+
+  def `abstract`(meta: Option[Meta]): web.tree.Node =
+    meta.map { m =>
+      html"""<p><small><strong>Abstract: </strong><em>${m.`abstract`}</em></small></p>"""
     }.getOrElse(web.tree.Null)
 
   def navigationHeader(meta: Option[Meta],

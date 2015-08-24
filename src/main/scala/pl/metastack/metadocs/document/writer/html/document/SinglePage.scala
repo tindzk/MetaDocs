@@ -24,6 +24,7 @@ object SinglePage {
     val body = web.tree.PlaceholderSeqNode(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
+      Components.`abstract`(meta),
       writer.root.write(root),
       Components.footnotes(writer, footnotes)
     ))

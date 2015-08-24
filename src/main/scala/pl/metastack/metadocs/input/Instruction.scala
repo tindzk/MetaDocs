@@ -109,14 +109,6 @@ case object Subsection extends Instruction[document.tree.Subsection] {
   }
 }
 
-case object Abstract extends Instruction[document.tree.Abstract] {
-  override val name = "abstract"
-
-  override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Abstract =
-    document.tree.Abstract(conversion.childrenOf(tag): _*)
-}
-
 case object Bold extends Instruction[document.tree.Bold] {
   override val name = "bold"
   override def documentNode(conversion: Conversion,
@@ -306,8 +298,8 @@ trait InstructionSet {
 
 object DefaultInstructionSet extends InstructionSet {
   override val instructions: Set[Instruction[_]] = Set(
-    Abstract, Jump, Footnote, Chapter, Section, Subsection, Bold, Italic, Url,
-    List, ListItem, Code, Image, Table, Row, Column)
+    Jump, Footnote, Chapter, Section, Subsection, Bold, Italic, Url, List,
+    ListItem, Code, Image, Table, Row, Column)
 }
 
 object CodeInstructionSet extends InstructionSet {
