@@ -16,7 +16,7 @@ object MultiPage {
                  meta: Option[Meta],
                  tocDepth: Int,
                  referenceUrl: String => String) {
-    val body = web.tree.PlaceholderSeqNode(Seq(
+    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta)
@@ -47,7 +47,7 @@ object MultiPage {
       if (chapters.last == chapter) None
       else Some(chapters(index + 1))
 
-    val body = web.tree.PlaceholderSeqNode(Seq(
+    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
       Components.navigationHeader(meta, previous, next),
       writer.chapter.write(chapter),
       Components.footnotes(writer, footnotes)

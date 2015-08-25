@@ -21,7 +21,7 @@ object SinglePage {
 
     val footnotes = Extractors.footnotes(root)
 
-    val body = web.tree.PlaceholderSeqNode(Seq(
+    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta),

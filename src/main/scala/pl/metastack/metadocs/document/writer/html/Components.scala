@@ -32,12 +32,12 @@ object Components {
 
     val toc = root.children.flatMap(iterate(_, 0))
 
-    if (toc.isEmpty) web.tree.Null
+    if (toc.isEmpty) web.tree.immutable.Null
     else html"""<nav id="toc"><ul>$toc</ul></nav>"""
   }
 
   def footnotes(writer: Writer, footnotes: Seq[tree.Footnote]): web.tree.Node =
-    if (footnotes.isEmpty) web.tree.Null
+    if (footnotes.isEmpty) web.tree.immutable.Null
     else {
       val items = footnotes.map { fn =>
         val id = fn.id.get
@@ -72,12 +72,12 @@ object Components {
           <p class="affilation"><em>${m.affiliation}</em></p>
         </header>
       """
-    }.getOrElse(web.tree.Null)
+    }.getOrElse(web.tree.immutable.Null)
 
   def `abstract`(meta: Option[Meta]): web.tree.Node =
     meta.map { m =>
       html"""<p><small><strong>Abstract: </strong><em>${m.`abstract`}</em></small></p>"""
-    }.getOrElse(web.tree.Null)
+    }.getOrElse(web.tree.immutable.Null)
 
   def navigationHeader(meta: Option[Meta],
                        previous: Option[tree.Chapter],
@@ -92,10 +92,10 @@ object Components {
     val nextHtml = next.map { ch =>
       val href = s"${ch.id.get}.html"
       html"""<span>Next chapter: <a href=$href>${ch.title}</a></span>"""
-    }.getOrElse(web.tree.Null)
+    }.getOrElse(web.tree.immutable.Null)
 
     val separator =
-      if (previousHtml != web.tree.Null && nextHtml != web.tree.Null) " | "
+      if (previousHtml != web.tree.immutable.Null && nextHtml != web.tree.immutable.Null) " | "
       else ""
 
     val title =
@@ -105,9 +105,9 @@ object Components {
             <h1 class="title">${m.title}</h1>
           </header>
           """
-      }.getOrElse(web.tree.Null)
+      }.getOrElse(web.tree.immutable.Null)
 
-    web.tree.PlaceholderSeqNode(Seq(
+    web.tree.immutable.PlaceholderSeqNode(Seq(
       title,
       html"<nav>$previousHtml $separator $nextHtml</nav>"))
   }

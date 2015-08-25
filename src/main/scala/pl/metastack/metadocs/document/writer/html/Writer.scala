@@ -51,18 +51,18 @@ class Writer(referenceUrl: String => String) {
   }
 
   val subsection = WebWriter[tree.Subsection] { subsection =>
-    web.tree.PlaceholderSeqNode(
+    web.tree.immutable.PlaceholderSeqNode(
       html"<h3 id=${subsection.id}>${subsection.title}</h3>" +:
         children(subsection))
   }
 
   val section = WebWriter[tree.Section] { section =>
-    web.tree.PlaceholderSeqNode(
+    web.tree.immutable.PlaceholderSeqNode(
       html"<h2 id=${section.id}>${section.title}</h2>" +: children(section))
   }
 
   val chapter = WebWriter[tree.Chapter] { chapter =>
-    web.tree.PlaceholderSeqNode(
+    web.tree.immutable.PlaceholderSeqNode(
       html"<h1 id=${chapter.id}>${chapter.title}</h1>" +: children(chapter))
   }
 
@@ -75,12 +75,12 @@ class Writer(referenceUrl: String => String) {
   }
 
   val sbt = WebWriter[tree.Sbt] { sbt =>
-    if (sbt.hidden) web.tree.Null
+    if (sbt.hidden) web.tree.immutable.Null
     else html"""<pre class="sourceCode scala"><code>${sbt.code}</code></pre>"""
   }
 
   val scala = WebWriter[tree.Scala] { scala =>
-    if (scala.hidden) web.tree.Null
+    if (scala.hidden) web.tree.immutable.Null
     else {
       val code = html"""<pre class="sourceCode scala"><code>${scala.code}</code></pre>"""
       val result = scala.result.map { result =>
@@ -89,7 +89,7 @@ class Writer(referenceUrl: String => String) {
           html"""<pre class="sourceCode"><code>$result</code></pre>""")
       }
 
-      web.tree.PlaceholderSeqNode(code +: result.getOrElse(Seq.empty))
+      web.tree.immutable.PlaceholderSeqNode(code +: result.getOrElse(Seq.empty))
     }
   }
 
@@ -114,7 +114,7 @@ class Writer(referenceUrl: String => String) {
   }
 
   val text = WebWriter[tree.Text] { text =>
-    web.tree.Text(Var(text.text))
+    web.tree.immutable.Text(text.text)
   }
 
   val footnote = WebWriter[tree.Footnote] { fn =>
@@ -134,6 +134,6 @@ class Writer(referenceUrl: String => String) {
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
-    web.tree.PlaceholderSeqNode(root.children.map(node.write))
+    web.tree.immutable.PlaceholderSeqNode(root.children.map(node.write))
   }
 }
