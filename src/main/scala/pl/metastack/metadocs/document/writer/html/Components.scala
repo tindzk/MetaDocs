@@ -12,10 +12,10 @@ object Components {
     def render(caption: String,
                id: Option[String],
                children: Seq[web.tree.Node]): web.tree.Node = {
-      val childrenHtml = children.map(child => html"<ul>$child</ul>")
+      val childrenHtml = children.map(child => htmlT"<ul>$child</ul>")
 
       val url = id.map(referenceUrl)
-      html"<li><a href=$url>$caption</a>$childrenHtml</li>"
+      htmlT"<li><a href=$url>$caption</a>$childrenHtml</li>"
     }
 
     def iterate(node: tree.Node, depth: Int): Option[web.tree.Node] =
@@ -32,19 +32,19 @@ object Components {
 
     val toc = root.children.flatMap(iterate(_, 0))
 
-    if (toc.isEmpty) web.tree.immutable.Null
-    else html"""<nav id="toc"><ul>$toc</ul></nav>"""
+    if (toc.isEmpty) web.tree.Null
+    else htmlT"""<nav id="toc"><ul>$toc</ul></nav>"""
   }
 
   def footnotes(writer: Writer, footnotes: Seq[tree.Footnote]): web.tree.Node =
-    if (footnotes.isEmpty) web.tree.immutable.Null
+    if (footnotes.isEmpty) web.tree.Null
     else {
       val items = footnotes.map { fn =>
         val id = fn.id.get
         val fnId = s"fn$id"
         val target = s"#fnref$id"
 
-        html"""
+        htmlT"""
             <li id=$fnId>
               <p>
                 ${writer.children(fn)}
@@ -54,7 +54,7 @@ object Components {
           """
       }
 
-      html"""
+      htmlT"""
           <div class="footnotes">
             <hr />
             <ol>$items</ol>
@@ -64,7 +64,7 @@ object Components {
 
   def header(meta: Option[Meta]): web.tree.Node =
     meta.map { m =>
-      html"""
+      htmlT"""
         <header>
           <h3 class="date">${m.date}</h3>
           <h1 class="title">${m.title}</h1>
@@ -72,44 +72,44 @@ object Components {
           <p class="affilation"><em>${m.affiliation}</em></p>
         </header>
       """
-    }.getOrElse(web.tree.immutable.Null)
+    }.getOrElse(web.tree.Null)
 
   def `abstract`(meta: Option[Meta]): web.tree.Node =
     meta.map { m =>
-      html"""<p><small><strong>Abstract: </strong><em>${m.`abstract`}</em></small></p>"""
-    }.getOrElse(web.tree.immutable.Null)
+      htmlT"""<p><small><strong>Abstract: </strong><em>${m.`abstract`}</em></small></p>"""
+    }.getOrElse(web.tree.Null)
 
   def navigationHeader(meta: Option[Meta],
                        previous: Option[tree.Chapter],
                        next: Option[tree.Chapter]): web.tree.Node = {
     val previousHtml = previous.map { ch =>
       val href = s"${ch.id.get}.html"
-      html"""<span>Previous chapter: <a href=$href>${ch.title}</a></span>"""
+      htmlT"""<span>Previous chapter: <a href=$href>${ch.title}</a></span>"""
     }.getOrElse(
-      html"""<a href="index.html">Table of contents</a>"""
+      htmlT"""<a href="index.html">Table of contents</a>"""
     )
 
-    val nextHtml = next.map { ch =>
+    val nextHtml: web.tree.Node = next.map { ch =>
       val href = s"${ch.id.get}.html"
-      html"""<span>Next chapter: <a href=$href>${ch.title}</a></span>"""
-    }.getOrElse(web.tree.immutable.Null)
+      htmlT"""<span>Next chapter: <a href=$href>${ch.title}</a></span>"""
+    }.getOrElse(web.tree.Null)
 
     val separator =
-      if (previousHtml != web.tree.immutable.Null && nextHtml != web.tree.immutable.Null) " | "
+      if (nextHtml != web.tree.Null) " | "
       else ""
 
     val title =
       meta.map { m =>
-        html"""
+        htmlT"""
           <header>
             <h1 class="title">${m.title}</h1>
           </header>
           """
-      }.getOrElse(web.tree.immutable.Null)
+      }.getOrElse(web.tree.Null)
 
-    web.tree.immutable.PlaceholderSeqNode(Seq(
+    web.tree.Container(Seq(
       title,
-      html"<nav>$previousHtml $separator $nextHtml</nav>"))
+      htmlT"<nav>$previousHtml $separator $nextHtml</nav>"))
   }
 
   def pageSkeleton(cssPath: Option[String],
@@ -118,7 +118,7 @@ object Components {
     val title = meta.map(_.title).getOrElse("")
     val language = meta.map(_.language).getOrElse("en-GB")
 
-    html"""
+    htmlT"""
       <!DOCTYPE html>
       <html lang="$language">
         <head>

@@ -7,6 +7,7 @@ import pl.metastack.metadocs.document.tree
 import pl.metastack.metadocs.document.writer.html.{Components, Writer}
 import pl.metastack.metadocs.document.{Meta, Extractors}
 
+import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object MultiPage {
@@ -16,7 +17,7 @@ object MultiPage {
                  meta: Option[Meta],
                  tocDepth: Int,
                  referenceUrl: String => String) {
-    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
+    val body = web.tree.Container(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta)
@@ -25,7 +26,7 @@ object MultiPage {
     val result = Components.pageSkeleton(cssPath, meta, body)
 
     FileUtils.printToFile(new File(filePath, "index.html")) { fw =>
-      fw.write(result.toHtml)
+      fw.write(result.state(web.state.OneWay).toHtml)
     }
   }
 
@@ -47,7 +48,7 @@ object MultiPage {
       if (chapters.last == chapter) None
       else Some(chapters(index + 1))
 
-    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
+    val body = web.tree.Container(Seq(
       Components.navigationHeader(meta, previous, next),
       writer.chapter.write(chapter),
       Components.footnotes(writer, footnotes)
@@ -56,7 +57,7 @@ object MultiPage {
     val result = Components.pageSkeleton(cssPath, meta, body)
 
     FileUtils.printToFile(new File(filePath, s"${chapter.id.get}.html")) { fw =>
-      fw.write(result.toHtml)
+      fw.write(result.state(web.state.OneWay).toHtml)
     }
   }
 

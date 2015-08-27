@@ -7,6 +7,7 @@ import pl.metastack.metadocs.document.tree
 import pl.metastack.metadocs.document.writer.html.{Components, Writer}
 import pl.metastack.metadocs.document.{Meta, Extractors}
 
+import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object SinglePage {
@@ -21,7 +22,7 @@ object SinglePage {
 
     val footnotes = Extractors.footnotes(root)
 
-    val body = web.tree.immutable.PlaceholderSeqNode(Seq(
+    val body = web.tree.Container(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta),
@@ -32,7 +33,7 @@ object SinglePage {
     val result = Components.pageSkeleton(cssPath, meta, body)
 
     FileUtils.printToFile(new File(outputPath)) { fw =>
-      fw.write(result.toHtml)
+      fw.write(result.state(web.state.OneWay).toHtml)
     }
   }
 }
