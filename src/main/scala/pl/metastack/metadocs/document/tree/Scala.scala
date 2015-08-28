@@ -6,6 +6,8 @@ case class Scala(
   global: Boolean,
   printResult: Boolean,
   hidden: Boolean,
+  `class`: Option[String],
+  section: Option[String],
   code: String,
   result: Option[String] = None
 ) extends Node {

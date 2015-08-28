@@ -3,11 +3,11 @@ package pl.metastack.metadocs.document.writer
 import java.io.File
 
 import scala.collection.mutable
+import scala.sys.process.ProcessLogger
 
 import pl.metastack.metadocs.FileUtils
 import pl.metastack.metadocs.document.tree
-
-import scala.sys.process.ProcessLogger
+import pl.metastack.metadocs.input.TextHelpers
 
 class SbtScala(projectsPath: String) {
   def Prologue(projectName: String) =
@@ -33,7 +33,7 @@ class SbtScala(projectsPath: String) {
                      var scalaMain: String = "",
                      functionCalls: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty[String])
 
-  def createProjects(root: tree.Root) {
+  def createProjects(root: tree.Root): tree.Root = {
     val output = new File(projectsPath)
     output.mkdirs()
 
@@ -58,7 +58,24 @@ class SbtScala(projectsPath: String) {
       }
     }
 
-    def iterate(node: tree.Node) {
+    def writeRunCode(project: Project,
+                     id: String,
+                     code: String,
+                     printResult: Boolean) {
+      if (printResult) {
+        project.scalaMain += s"def $id() = {\n"
+        project.functionCalls +=
+          s"""Utils.writeResult("$id.txt", $id())"""
+      } else {
+        project.scalaMain += s"def $id() {\n"
+        project.functionCalls += s"$id()"
+      }
+
+      project.scalaMain += code
+      project.scalaMain += "}\n"
+    }
+
+    def iterate(node: tree.Node): tree.Node = {
       node match {
         case sbt @ tree.Sbt(id, project, hidden, code) =>
           project.foreach { p =>
@@ -66,32 +83,43 @@ class SbtScala(projectsPath: String) {
               p -> Project(scalaGlobal = Prologue(p))
             projects(p).sbtImports += sbt.code + "\n"
           }
+          sbt
 
         case scala: tree.Scala =>
-          scala.project.foreach { projectName =>
+          scala.project.map { projectName =>
             val project = projects(projectName)
 
-            if (scala.global) project.scalaGlobal += scala.code + "\n"
-            else {
-              if (scala.printResult) {
-                project.scalaMain += s"def ${scala.id}() = {\n"
-                project.functionCalls +=
-                  s"""Utils.writeResult("${scala.id}.txt", ${scala.id}())"""
-              } else {
-                project.scalaMain += s"def ${scala.id}() {\n"
-                project.functionCalls += s"${scala.id}()"
-              }
+            if (scala.`class`.isDefined) {
+              assert(scala.code.isEmpty)
+              val `class` = scala.`class`.get.split('.').mkString("/")
+              val file = new File(projectsPath, s"$projectName/src/main/scala/${`class`}.scala")
+              val contents = io.Source.fromFile(file).mkString
+              val section = scala.section.get
+              val startMarker = s"{{{ $section"
+              val endMarker = "}}}"
+              val start = contents.indexOf(startMarker)
+              if (start == -1) throw new RuntimeException(s"Section '$section' not found")
+              val end = contents.indexOf(endMarker, start)
+              if (end == -1) throw new RuntimeException(s"End of section '$section' not found")
+              val code = TextHelpers.reindent(
+                contents.substring(start + startMarker.length, end - endMarker.length))
+              writeRunCode(project, scala.id, code, scala.printResult)
 
-              project.scalaMain += scala.code
-              project.scalaMain += "}\n"
+              scala.copy(code = code)
+            } else if (scala.global) {
+              project.scalaGlobal += scala.code + "\n"
+              scala
+            } else {
+              writeRunCode(project, scala.id, scala.code, scala.printResult)
+              scala
             }
-          }
+          }.getOrElse(scala)
 
-        case node: tree.Node => node.children.foreach(iterate)
+        case node: tree.Node => node
       }
     }
 
-    root.children.foreach(iterate)
+    val mapped = root.map(iterate).asInstanceOf[tree.Root]
 
     projects.foreach { case (projectName, project) =>
       writeSbt(projectName, project.sbtImports)
@@ -113,6 +141,8 @@ class SbtScala(projectsPath: String) {
           """)
       }
     }
+
+    mapped
   }
 
   def listingPath(scala: tree.Scala): String =

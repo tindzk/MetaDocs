@@ -69,7 +69,7 @@ case object Chapter extends Instruction[document.tree.Chapter] {
     document.tree.Chapter(
       idValue.orElse(conversion.generateId(titleValue)),
       titleValue,
-      conversion.detectParagraphs(conversion.childrenOf(tag)): _*)
+      TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
   }
 }
 
@@ -87,7 +87,7 @@ case object Section extends Instruction[document.tree.Section] {
     document.tree.Section(
       idValue.orElse(conversion.generateId(titleValue)),
       titleValue,
-      conversion.detectParagraphs(conversion.childrenOf(tag)): _*)
+      TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
   }
 }
 
@@ -105,7 +105,7 @@ case object Subsection extends Instruction[document.tree.Subsection] {
     document.tree.Subsection(
       idValue.orElse(conversion.generateId(titleValue)),
       titleValue,
-      conversion.detectParagraphs(conversion.childrenOf(tag)): _*)
+      TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
   }
 }
 
@@ -193,6 +193,8 @@ case object Scala extends Instruction[document.tree.Scala] {
   val global = argument("global", default = false)
   val printResult = argument("printResult", default = false)
   val hidden = argument("hidden", default = false)
+  val `class` = argument("class", default = false)
+  val section = argument("section", default = false)
 
   override val name = "scala"
 
@@ -213,7 +215,9 @@ case object Scala extends Instruction[document.tree.Scala] {
       globalValue,
       printResultValue,
       hidden.getBooleanOpt(conversion, tag).getOrElse(false),
-      conversion.reindent(tag.text))
+      `class`.getStringOpt(conversion, tag),
+      section.getStringOpt(conversion, tag),
+      TextHelpers.reindent(tag.text))
   }
 }
 
@@ -229,7 +233,7 @@ case object Sbt extends Instruction[document.tree.Sbt] {
       conversion.listingId(),
       project.getStringOpt(conversion, tag),
       hidden.getBooleanOpt(conversion, tag).getOrElse(false),
-      conversion.reindent(tag.text))
+      TextHelpers.reindent(tag.text))
 }
 
 case object Shell extends Instruction[document.tree.Shell] {
@@ -239,7 +243,7 @@ case object Shell extends Instruction[document.tree.Shell] {
                             tag: input.tree.Tag): document.tree.Shell =
     document.tree.Shell(
       conversion.listingId(),
-      conversion.reindent(tag.text))
+      TextHelpers.reindent(tag.text))
 }
 
 case object Todo extends Instruction[document.tree.Todo] {
