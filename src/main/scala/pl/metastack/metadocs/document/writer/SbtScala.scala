@@ -7,6 +7,8 @@ import scala.collection.mutable
 import pl.metastack.metadocs.FileUtils
 import pl.metastack.metadocs.document.tree
 
+import scala.sys.process.ProcessLogger
+
 class SbtScala(projectsPath: String) {
   def Prologue(projectName: String) =
     """
@@ -148,9 +150,13 @@ class SbtScala(projectsPath: String) {
       println(s"""[info] Running projects: ${projects.mkString(", ")}""")
 
       projects.foreach { project =>
-        sys.process.Process(
+        val code = sys.process.Process(
           Seq("sbt", "run"),
-          new java.io.File(projectsPath + "/" + project)).!!
+          new File(projectsPath + "/" + project)
+        ).run(ProcessLogger(Console.out.println, Console.err.println))
+
+        if (code.exitValue() == 1)
+          throw new RuntimeException("Project could not be compiled")
       }
     }
   }
