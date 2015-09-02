@@ -1,11 +1,24 @@
 package pl.metastack.metadocs.document.writer.html
 
+import org.joda.time.DateTime
 import pl.metastack.metadocs.document.{tree, Meta}
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object Components {
+  def generatedWith(smallClass: Boolean = false): web.tree.Node = {
+    val link = htmlT"""<a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>"""
+    if (smallClass) htmlT"""<p class="small">Generated with $link</p>"""
+    else htmlT"""<p><small>Generated with $link</small></p>"""
+  }
+
+  def copyright(meta: Meta): web.tree.Node = {
+    val dt = new DateTime
+    val year = dt.year().getAsText
+    htmlT"""<p class="small">© Copyright $year ${meta.author}</p>"""
+  }
+
   def toc(root: tree.Root,
           maxDepth: Int,
           referenceUrl: String => String): web.tree.Node = {
@@ -36,7 +49,9 @@ object Components {
     else htmlT"""<nav id="toc"><ul>$toc</ul></nav>"""
   }
 
-  def footnotes(writer: Writer, footnotes: Seq[tree.Footnote]): web.tree.Node =
+  def footnotes(writer: Writer,
+                footnotes: Seq[tree.Footnote],
+                hr: Boolean = true): web.tree.Node =
     if (footnotes.isEmpty) web.tree.Null
     else {
       val items = footnotes.map { fn =>
@@ -54,25 +69,30 @@ object Components {
           """
       }
 
+      val hrT: web.tree.Node = if (hr) htmlT"<hr />" else web.tree.Null
+
       htmlT"""
           <div class="footnotes">
-            <hr />
+            $hrT
             <ol>$items</ol>
           </div>
         """
     }
 
-  def header(meta: Option[Meta]): web.tree.Node =
+  def header(meta: Option[Meta]): web.tree.Node = {
     meta.map { m =>
+      val date = m.date.toString("MMMM YYYY", m.locale)
+
       htmlT"""
         <header>
-          <h3 class="date">${m.date}</h3>
+          <h3 class="date">$date</h3>
           <h1 class="title">${m.title}</h1>
           <h2 class="author">${m.author}</h2>
           <p class="affilation"><em>${m.affiliation}</em></p>
         </header>
       """
     }.getOrElse(web.tree.Null)
+  }
 
   def `abstract`(meta: Option[Meta]): web.tree.Node =
     meta.map { m =>
@@ -112,28 +132,60 @@ object Components {
       htmlT"<nav>$previousHtml $separator $nextHtml</nav>"))
   }
 
-  def pageSkeleton(cssPath: Option[String],
-                   meta: Option[Meta],
-                   body: web.tree.Node): web.tree.Node = {
-    val title = meta.map(_.title).getOrElse("")
+  type Skeleton = (Option[Meta], Option[String], web.tree.Node) => web.tree.Node
+
+  def pageSkeleton(cssPaths: Seq[String] = Seq.empty,
+                   jsPaths: Seq[String] = Seq.empty,
+                   script: Option[String] = None,
+                   favicon: Option[String] = None,
+                   rss: Option[String] = None
+                  )(meta: Option[Meta],
+                    pageTitle: Option[String],
+                    body: web.tree.Node): web.tree.Node = {
+    val siteTitle = meta.map(_.title)
+    val fullTitle = (siteTitle.toSeq ++ pageTitle.toSeq).mkString(" - ")
+
     val language = meta.map(_.language).getOrElse("en-GB")
+
+    val faviconT: web.tree.Node =
+      favicon.map { href =>
+        htmlT"""<link rel="shortcut icon" href=$href />"""
+      }.getOrElse(web.tree.Null)
+
+    val rssT: web.tree.Node = rss.map { href =>
+      htmlT"""<link rel="alternate" type="application/rss+xml" title=$siteTitle href=$href />"""
+    }.getOrElse(web.tree.Null)
+
+    val cssT = cssPaths.map { href =>
+      htmlT"""<link rel="stylesheet" type="text/css" href=$href />"""
+    }
+
+    val jsPathsT = jsPaths.map { path =>
+      htmlT"<script src=$path></script>"
+    }
+
+    val scriptT: web.tree.Node = script.map { js =>
+      htmlT"<script>$js</script>"
+    }.getOrElse(web.tree.Null)
 
     htmlT"""
       <!DOCTYPE html>
       <html lang="$language">
         <head>
-          <title>$title</title>
+          <title>$fullTitle</title>
           <meta charset="utf-8" />
+          <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta name="generator" content="MetaDocs" />
-          <link rel="stylesheet" type="text/css" href=$cssPath />
+          $faviconT
+          $rssT
+          $cssT
         </head>
 
         <body>
-          <div id="wrapper">
-            $body
-            <p><small>Generated with <a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>.</small></p>
-          </div>
+          $body
+          $jsPathsT
+          $scriptT
         </body>
       </html>
       """

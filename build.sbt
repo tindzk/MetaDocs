@@ -26,10 +26,11 @@ pomExtra in Global := {
   </developers>
 }
 
-libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.2.1"
-
-libraryDependencies += "pl.metastack" %% "metaweb" % "0.1.0"
-
-libraryDependencies += "org.monifu" %% "minitest" % "0.13" % "test"
+libraryDependencies ++= Seq(
+  "pl.metastack" %% "metaweb" % "0.1.1-SNAPSHOT",
+  "com.lihaoyi" %% "fastparse" % "0.2.1",
+  "joda-time" % "joda-time" % "2.8.2",
+  "org.monifu" %% "minitest" % "0.13" % "test"
+)
 
 testFrameworks += new TestFramework("minitest.runner.Framework")

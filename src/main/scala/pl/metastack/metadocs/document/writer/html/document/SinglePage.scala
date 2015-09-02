@@ -12,8 +12,8 @@ import pl.metastack.{metaweb => web}
 
 object SinglePage {
   def write(root: tree.Root,
+            skeleton: Components.Skeleton,
             outputPath: String,
-            cssPath: Option[String],
             meta: Option[Meta],
             toc: Boolean,
             tocDepth: Int = 3) {
@@ -30,7 +30,7 @@ object SinglePage {
       Components.footnotes(writer, footnotes)
     ))
 
-    val result = Components.pageSkeleton(cssPath, meta, body)
+    val result = skeleton(meta, None, body)
 
     FileUtils.printToFile(new File(outputPath)) { fw =>
       fw.write(result.state(web.state.OneWay).toHtml)

@@ -11,7 +11,8 @@ MetaDocs is a Scala library for generating manuals.
 * TOC generation
 * Checked references to chapters/sections
 * HTML generation
-* HTML output is compatible with [Marked](http://marked2app.com/help/Writing_Custom_CSS.html) styles
+* HTML output is compatible with [Marked](http://marked2app.com/help/Writing_Custom_CSS.html) and [Jekyll](http://jekyllrb.com/) themes
+* Document types: single-page, book, blog
 
 ## License
 MetaDocs is licensed under the terms of the Apache v2.0 license.

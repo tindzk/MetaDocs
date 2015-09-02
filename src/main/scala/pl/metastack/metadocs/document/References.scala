@@ -27,13 +27,13 @@ case class References(children: Seq[Reference]) {
     }.get
   }
 
-  def chapterOf(needle: Reference): Reference = {
+  def topLevelReferenceOf(needle: Reference): Reference = {
     def f(chapter: Reference, node: Reference): Boolean =
       node match {
         case `needle` => true
         case Reference(_, _, ch) => ch.exists(f(chapter, _))
       }
 
-    children.find(chapter => f(chapter, chapter)).get
+    children.find(child => f(child, child)).get
   }
 }

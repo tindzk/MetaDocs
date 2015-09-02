@@ -2,12 +2,14 @@ package pl.metastack.metadocs.document
 
 import java.io.File
 
+import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
+
+import pl.metastack.{metaweb => web}
+
 import pl.metastack.metadocs._
 import pl.metastack.metadocs.input.InstructionSet
 import pl.metastack.metadocs.input.tree.Root
-
-import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
 
 object Document {
   def loadFile(filePath: String): Try[Root] = {
@@ -46,12 +48,10 @@ object Document {
       }
 
     root.map {
-      case tag @ tree.Chapter(id, caption, children @ _*) =>
-        tag.copy(id = rename(id))
-      case tag @ tree.Section(id, caption, children @ _*) =>
-        tag.copy(id = rename(id))
-      case tag @ tree.Subsection(id, caption, children @ _*) =>
-        tag.copy(id = rename(id))
+      case tag: tree.Post => tag.copy(id = rename(tag.id))
+      case tag: tree.Chapter => tag.copy(id = rename(tag.id))
+      case tag: tree.Section => tag.copy(id = rename(tag.id))
+      case tag: tree.Subsection => tag.copy(id = rename(tag.id))
       case tag => tag
     }.asInstanceOf[tree.Root]
   }
@@ -60,6 +60,9 @@ object Document {
     val idToCaption = mutable.HashMap.empty[String, String]
 
     root.map {
+      case tag @ tree.Post(Some(id), _, caption, _, children @ _*) =>
+        idToCaption += (id -> caption)
+        tag
       case tag @ tree.Chapter(Some(id), caption, children @ _*) =>
         idToCaption += (id -> caption)
         tag
@@ -121,5 +124,22 @@ object Document {
     }
 
     iterate(root)
+  }
+
+  def writeHtml(filePath: File, id: String, root: web.tree.Node) {
+    import pl.metastack.metaweb._
+    FileUtils.printToFile(new File(filePath, s"$id.html")) { fw =>
+      fw.write(root.state(web.state.OneWay).toHtml)
+    }
+  }
+
+  def writeXml(filePath: File, id: String, root: web.tree.Node) {
+    import pl.metastack.metaweb._
+    FileUtils.printToFile(new File(filePath, s"$id.xml")) { fw =>
+      fw.write(
+        """<?xml version="1.0" encoding="UTF-8"?>""" + "\n" +
+        root.state(web.state.OneWay).toHtml
+      )
+    }
   }
 }

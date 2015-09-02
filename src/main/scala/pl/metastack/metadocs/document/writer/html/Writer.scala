@@ -76,13 +76,13 @@ class Writer(referenceUrl: String => String) {
 
   val sbt = WebWriter[tree.Sbt] { sbt =>
     if (sbt.hidden) web.tree.Null
-    else htmlT"""<pre class="sourceCode scala"><code>${sbt.code}</code></pre>"""
+    else htmlT"""<pre class="sourceCode scala"><code data-lang="scala">${sbt.code}</code></pre>"""
   }
 
   val scala = WebWriter[tree.Scala] { scala =>
     if (scala.hidden) web.tree.Null
     else {
-      val code = htmlT"""<pre class="sourceCode scala"><code>${scala.code}</code></pre>"""
+      val code = htmlT"""<pre class="sourceCode scala"><code data-lang="scala">${scala.code}</code></pre>"""
       val result = scala.result.map { result =>
         Seq(
           htmlT"<b>Output:</b>",

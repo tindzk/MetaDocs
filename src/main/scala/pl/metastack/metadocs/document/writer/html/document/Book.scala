@@ -2,40 +2,42 @@ package pl.metastack.metadocs.document.writer.html.document
 
 import java.io.File
 
-import pl.metastack.metadocs.FileUtils
+import pl.metastack.metadocs.document._
 import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.writer.html.{Components, Writer}
-import pl.metastack.metadocs.document.{Meta, Extractors}
+import pl.metastack.metadocs.document.writer.html.Writer
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
+import pl.metastack.metadocs.document.writer.html.Components
 
-object MultiPage {
-  def writeIndex(root: tree.Root,
-                 filePath: File,
-                 cssPath: Option[String],
-                 meta: Option[Meta],
-                 tocDepth: Int,
-                 referenceUrl: String => String) {
+object Book {
+  def bodyWrapper(body: web.tree.Node) = {
+    val generatedWith = Components.generatedWith()
+    htmlT"""
+    <div id="wrapper">
+      $body
+      $generatedWith
+    </div>
+    """
+  }
+
+  def index(root: tree.Root,
+            meta: Option[Meta],
+            tocDepth: Int,
+            referenceUrl: String => String) = {
     val body = web.tree.Container(Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta)
     ))
 
-    val result = Components.pageSkeleton(cssPath, meta, body)
-
-    FileUtils.printToFile(new File(filePath, "index.html")) { fw =>
-      fw.write(result.state(web.state.OneWay).toHtml)
-    }
+    bodyWrapper(body)
   }
 
-  def writeChapter(filePath: File,
-                   writer: Writer,
-                   chapters: Seq[tree.Chapter],
-                   chapter: tree.Chapter,
-                   cssPath: Option[String],
-                   meta: Option[Meta]) {
+  def chapter(meta: Option[Meta],
+              writer: Writer,
+              chapters: Seq[tree.Chapter],
+              chapter: tree.Chapter): web.tree.Node = {
     val footnotes = Extractors.footnotes(chapter)
 
     val index = chapters.indexOf(chapter)
@@ -54,16 +56,12 @@ object MultiPage {
       Components.footnotes(writer, footnotes)
     ))
 
-    val result = Components.pageSkeleton(cssPath, meta, body)
-
-    FileUtils.printToFile(new File(filePath, s"${chapter.id.get}.html")) { fw =>
-      fw.write(result.state(web.state.OneWay).toHtml)
-    }
+    bodyWrapper(body)
   }
 
   def write(root: tree.Root,
+            skeleton: Components.Skeleton,
             outputPath: String,
-            cssPath: Option[String],
             meta: Option[Meta],
             tocDepth: Int = 3) {
     val filePath = new File(outputPath)
@@ -73,7 +71,7 @@ object MultiPage {
 
     def referenceUrl(id: String): String = {
       val resolved = references.resolve(id)
-      val chapter = references.chapterOf(resolved)
+      val chapter = references.topLevelReferenceOf(resolved)
       val anchor =
         if (chapter == resolved) ""
         else s"#${resolved.id.get}"  // Reference to a section
@@ -82,12 +80,16 @@ object MultiPage {
 
     val writer = new Writer(referenceUrl)
 
-    writeIndex(root, filePath, cssPath, meta, tocDepth, referenceUrl)
+    val indexBody = index(root, meta, tocDepth, referenceUrl)
+    val indexResult = skeleton(meta, None, indexBody)
+    Document.writeHtml(filePath, "index", indexResult)
 
     val chapters = Extractors.chapters(root)
 
     chapters.foreach { chapter =>
-      writeChapter(filePath, writer, chapters, chapter, cssPath, meta)
+      val body = this.chapter(meta, writer, chapters, chapter)
+      val result = skeleton(meta, Some(chapter.title), body)
+      Document.writeHtml(filePath, chapter.id.get, result)
     }
   }
 }

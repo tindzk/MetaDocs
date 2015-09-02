@@ -1,5 +1,6 @@
 package pl.metastack.metadocs.input
 
+import org.joda.time.format.DateTimeFormat
 import pl.metastack.metadocs.{document, input}
 
 case class ArgumentParser(name: String, default: Boolean) {
@@ -69,6 +70,32 @@ case object Chapter extends Instruction[document.tree.Chapter] {
     document.tree.Chapter(
       idValue.orElse(conversion.generateId(titleValue)),
       titleValue,
+      TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
+  }
+}
+
+case object Post extends Instruction[document.tree.Post] {
+  val DateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
+
+  val id = argument("id", default = false)
+  val date = argument("date", default = false)
+  val title = argument("title", default = true)
+  val description = argument("description", default = false)
+
+  override val name = "post"
+
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Post = {
+    val idValue = id.getStringOpt(conversion, tag)
+    val dateValue = date.getString(conversion, tag)
+    val titleValue = title.getString(conversion, tag)
+    val descriptionOpt = description.getStringOpt(conversion, tag)
+
+    document.tree.Post(
+      idValue.orElse(conversion.generateId(titleValue)),
+      DateFormatter.parseDateTime(dateValue),
+      titleValue,
+      descriptionOpt,
       TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
   }
 }
@@ -284,10 +311,10 @@ trait InstructionSet {
 
   private val that = this
 
-  def withAliases(myAliases: Map[String, Instruction[_]]): InstructionSet =
+  def withAliases(myAliases: (String, Instruction[_])*): InstructionSet =
     new InstructionSet {
       override val instructions = that.instructions
-      override val aliases = that.aliases ++ myAliases
+      override val aliases = that.aliases ++ myAliases.toMap
     }
 
   def inherit(other: InstructionSet): InstructionSet = new InstructionSet {
@@ -302,8 +329,16 @@ trait InstructionSet {
 
 object DefaultInstructionSet extends InstructionSet {
   override val instructions: Set[Instruction[_]] = Set(
-    Jump, Footnote, Chapter, Section, Subsection, Bold, Italic, Url, List,
-    ListItem, Code, Image, Table, Row, Column)
+    Jump, Footnote, Bold, Italic, Url, List, ListItem, Code, Image, Table, Row,
+    Column)
+}
+
+object BookInstructionSet extends InstructionSet {
+  override val instructions: Set[Instruction[_]] = Set(Chapter, Section, Subsection)
+}
+
+object BlogInstructionSet extends InstructionSet {
+  override val instructions: Set[Instruction[_]] = Set(Post, Section, Subsection)
 }
 
 object CodeInstructionSet extends InstructionSet {
