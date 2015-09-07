@@ -30,7 +30,7 @@ object SinglePage {
       Components.footnotes(writer, footnotes)
     ))
 
-    val result = skeleton(meta, None, body)
+    val result = skeleton(meta, None, Components.bodyWrapper(body))
 
     FileUtils.printToFile(new File(outputPath)) { fw =>
       fw.write(result.state(web.state.OneWay).toHtml)

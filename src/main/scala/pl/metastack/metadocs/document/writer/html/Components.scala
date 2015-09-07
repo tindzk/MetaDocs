@@ -7,6 +7,16 @@ import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object Components {
+  def bodyWrapper(body: web.tree.Node) = {
+    val generatedWith = Components.generatedWith()
+    htmlT"""
+    <div id="wrapper">
+      $body
+      $generatedWith
+    </div>
+    """
+  }
+
   def generatedWith(smallClass: Boolean = false): web.tree.Node = {
     val link = htmlT"""<a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>"""
     if (smallClass) htmlT"""<p class="small">Generated with $link</p>"""

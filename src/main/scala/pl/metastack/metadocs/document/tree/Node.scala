@@ -8,4 +8,6 @@ trait Node {
 
   def children: Seq[Node]
   def map(f: Node => Node): Node
+
+  def updateChildren(children: Seq[Node]): Node
 }

@@ -11,4 +11,5 @@ case class Post(id: Option[String],
   def map(f: Node => Node): Node = f(Post(id, date, title, description, children.map(_.map(f)): _*))
   def copy(id: Option[String] = id, date: DateTime = date, title: String = title, description: Option[String] = description, children: Seq[Node] = children) =
     Post(id, date, title, description, children: _*)
+  def updateChildren(children: Seq[Node]): Node = Post(id, date, title, description, children: _*)
 }

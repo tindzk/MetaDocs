@@ -11,16 +11,6 @@ import pl.metastack.{metaweb => web}
 import pl.metastack.metadocs.document.writer.html.Components
 
 object Book {
-  def bodyWrapper(body: web.tree.Node) = {
-    val generatedWith = Components.generatedWith()
-    htmlT"""
-    <div id="wrapper">
-      $body
-      $generatedWith
-    </div>
-    """
-  }
-
   def index(root: tree.Root,
             meta: Option[Meta],
             tocDepth: Int,
@@ -31,7 +21,7 @@ object Book {
       Components.`abstract`(meta)
     ))
 
-    bodyWrapper(body)
+    Components.bodyWrapper(body)
   }
 
   def chapter(meta: Option[Meta],
@@ -56,7 +46,7 @@ object Book {
       Components.footnotes(writer, footnotes)
     ))
 
-    bodyWrapper(body)
+    Components.bodyWrapper(body)
   }
 
   def write(root: tree.Root,

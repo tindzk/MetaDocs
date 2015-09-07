@@ -30,6 +30,7 @@ libraryDependencies ++= Seq(
   "pl.metastack" %% "metaweb" % "0.1.1-SNAPSHOT",
   "com.lihaoyi" %% "fastparse" % "0.2.1",
   "joda-time" % "joda-time" % "2.8.2",
+  "org.pegdown" % "pegdown" % "1.5.0",
   "org.monifu" %% "minitest" % "0.13" % "test"
 )
 
