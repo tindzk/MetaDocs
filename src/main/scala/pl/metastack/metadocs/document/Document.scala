@@ -12,16 +12,20 @@ import pl.metastack.metadocs.input.InstructionSet
 import pl.metastack.metadocs.input.tree.Root
 
 object Document {
-  def loadFile(filePath: String): Try[Root] = {
+  def loadFile(format: input.Format, filePath: String): Try[Root] = {
     val contents = io.Source.fromFile(new File(filePath)).mkString
-    input.Parser.parse(contents)
+    format match {
+      case input.Format.Markdown =>
+        Try(input.markdown.Pegdown.parse(contents)).map(_.asInstanceOf[Root])
+      case input.Format.MetaDocs => input.Parser.parse(contents)
+    }
   }
 
   /** Merge trees of loaded files */
-  def loadFiles(filePaths: Seq[String]): Root =
+  def loadFiles(format: input.Format, filePaths: Seq[String]): Root =
     Root(
       filePaths.flatMap { filePath =>
-        loadFile(filePath) match {
+        loadFile(format, filePath) match {
           case Success(root) => root.children
           case Failure(error) =>
             println(s"File $filePath could not be parsed:")
