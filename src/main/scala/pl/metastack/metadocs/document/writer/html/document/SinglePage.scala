@@ -33,7 +33,7 @@ object SinglePage {
     val result = skeleton(meta, None, Components.bodyWrapper(body))
 
     FileUtils.printToFile(new File(outputPath)) { fw =>
-      fw.write(result.state(web.state.OneWay).toHtml)
+      fw.write(result.state.toHtml)
     }
   }
 }

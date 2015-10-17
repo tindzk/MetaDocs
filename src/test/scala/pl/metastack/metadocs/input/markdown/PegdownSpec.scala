@@ -1,10 +1,55 @@
 package pl.metastack.metadocs.input.markdown
 
+import scala.util.Success
+
 import minitest.SimpleTestSuite
 
+import pl.metastack.metadocs.input
 import pl.metastack.metadocs.document.tree._
 
 object PegdownSpec extends SimpleTestSuite {
+  test("Parse block extension") {
+    assertEquals(BlockParser.parse("""[tag key="value"]"""),
+      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "value")))))
+
+    assertEquals(BlockParser.parse("""[tag   key="value"]"""),
+      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "value")))))
+
+    assertEquals(BlockParser.parse("""[tag   key="val ue"]"""),
+      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "val ue")))))
+
+    assertEquals(BlockParser.parse("""[tag key="value" key2="value2"]"""),
+      Success(input.tree.Tag("tag", Seq(
+        input.tree.Argument.Named("key", "value"),
+        input.tree.Argument.Named("key2", "value2")
+      ))))
+
+    assertEquals(BlockParser.parse("""[tag key="value"   key2="value2"]"""),
+      Success(input.tree.Tag("tag", Seq(
+        input.tree.Argument.Named("key", "value"),
+        input.tree.Argument.Named("key2", "value2")
+      ))))
+  }
+
+  test("Don't parse Markdown links") {
+    assertEquals(BlockParser.parse("""[autocommit](https://en.wikipedia.org/wiki/Autocommit)""").isFailure, true)
+  }
+
+  test("Replace blocks") {
+    assertEquals(
+      BlockParser.replace("""a [tag key="value"] b"""),
+      ("a %1 b",
+        Seq(input.tree.Tag("tag",
+          Seq(input.tree.Argument.Named("key", "value"))))))
+  }
+
+  test("Don't replace in code blocks") {
+    val input = """```scala
+column[Ref[Supplier], Int]()
+```"""
+    assertEquals(BlockParser.replace(input)._1, input)
+  }
+
   test("Bold") {
     assertEquals(Pegdown.parse("**Hello**"),
       Root(Paragraph(Bold(Text("Hello")))))
@@ -22,6 +67,21 @@ object PegdownSpec extends SimpleTestSuite {
       Root(Paragraph(Url("http://google.com/", Text("Google")))))
   }
 
+  test("Jump") {
+    assertEquals(Pegdown.parse("[Section](#section)"),
+      Root(Paragraph(Jump("section", Some("Section")))))
+  }
+
+  test("Jump without title") {
+    assertEquals(Pegdown.parse("[#section]"),
+      Root(Paragraph(Jump("section", None))))
+  }
+
+  test("Auto link") {
+    assertEquals(Pegdown.parse("[autocommit](https://en.wikipedia.org/wiki/Autocommit)"),
+      Root(Paragraph(Url("https://en.wikipedia.org/wiki/Autocommit", Text("autocommit")))))
+  }
+
   test("Source code") {
     assertEquals(Pegdown.parse(
       """
@@ -31,7 +91,7 @@ object PegdownSpec extends SimpleTestSuite {
       """.stripMargin),
 
       Root(
-        Scala(code = "test()")
+        Scala(code = Some("test()"))
       )
     )
   }
@@ -47,6 +107,22 @@ object PegdownSpec extends SimpleTestSuite {
         List(
           ListItem(Text("Item 1")),
           ListItem(Text("Item 2"))
+        )
+      )
+    )
+  }
+
+  test("Tables") {
+    assertEquals(Pegdown.parse(
+"""
+|a|b|
+|:-|:-|
+|l|r|"""),
+
+      Root(
+        Table(
+          Row(Column(Text("a")), Column(Text("b"))),
+          Row(Column(Text("l")), Column(Text("r")))
         )
       )
     )
@@ -89,6 +165,13 @@ object PegdownSpec extends SimpleTestSuite {
         ),
         Chapter(None, "Chapter 2", Paragraph(Text("Content 2")))
       )
+    )
+  }
+
+  test("Quoted") {
+    assertEquals(
+      Pegdown.parse("\"test\""),
+      Root(Paragraph(Text("\"test\"")))
     )
   }
 }

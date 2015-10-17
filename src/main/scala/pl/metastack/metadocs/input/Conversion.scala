@@ -6,12 +6,6 @@ import pl.metastack.metadocs.document
 class Conversion(val instructionSet: InstructionSet,
                  val generateId: String => Option[String],
                  val errata: Errata = new Errata) {
-  private var listingCount = 0
-  def listingId(): String = {
-    listingCount += 1
-    s"listing$listingCount"
-  }
-
   def convertRoot(root: tree.Root): document.tree.Root =
     document.tree.Root(root.children.map(convert): _*)
 

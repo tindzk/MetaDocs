@@ -74,23 +74,19 @@ class Writer(referenceUrl: String => String) {
     htmlT"<ul>${children(list)}</ul>"
   }
 
-  val sbt = WebWriter[tree.Sbt] { sbt =>
-    if (sbt.hidden) web.tree.Null
-    else htmlT"""<pre class="sourceCode scala"><code data-lang="scala">${sbt.code}</code></pre>"""
+  val `package` = WebWriter[tree.Package] { `package` =>
+    web.tree.Null
   }
 
   val scala = WebWriter[tree.Scala] { scala =>
-    if (scala.hidden) web.tree.Null
-    else {
-      val code = htmlT"""<pre class="sourceCode scala"><code data-lang="scala">${scala.code}</code></pre>"""
-      val result = scala.result.map { result =>
-        Seq(
-          htmlT"<b>Output:</b>",
-          htmlT"""<pre class="sourceCode"><code>$result</code></pre>""")
-      }
-
-      web.tree.Container(code +: result.getOrElse(Seq.empty))
+    val code = htmlT"""<pre class="sourceCode scala"><code data-lang="scala">${scala.code.get}</code></pre>"""
+    val result = scala.result.map { result =>
+      Seq(
+        htmlT"<b>Output:</b>",
+        htmlT"""<pre class="sourceCode"><code>$result</code></pre>""")
     }
+
+    web.tree.Container(code +: result.getOrElse(Seq.empty))
   }
 
   val shell = WebWriter[tree.Shell] { shell =>
@@ -129,8 +125,8 @@ class Writer(referenceUrl: String => String) {
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
-        list, listItem, code, url, image, bold, italic, todo, shell, sbt, scala,
-        chapter, section, subsection, paragraph, text, jump, footnote
+        list, listItem, code, url, image, bold, italic, todo, shell, `package`,
+        scala, chapter, section, subsection, paragraph, text, jump, footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>

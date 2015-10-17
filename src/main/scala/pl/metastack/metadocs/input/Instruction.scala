@@ -1,6 +1,7 @@
 package pl.metastack.metadocs.input
 
 import org.joda.time.format.DateTimeFormat
+import pl.metastack.metadocs.document.tree.ScalaType
 import pl.metastack.metadocs.{document, input}
 
 case class ArgumentParser(name: String, default: Boolean) {
@@ -214,53 +215,45 @@ case object Column extends Instruction[document.tree.Column] {
     document.tree.Column(conversion.childrenOf(tag): _*)
 }
 
+case object Package extends Instruction[document.tree.Package] {
+  val value = argument("value", default = true)
+
+  override val name = "package"
+
+  override def documentNode(conversion: Conversion,
+                            tag: input.tree.Tag): document.tree.Package =
+    document.tree.Package(value.getString(conversion, tag))
+}
+
 case object Scala extends Instruction[document.tree.Scala] {
-  val id = argument("id", default = false)
-  val project = argument("project", default = false)
-  val global = argument("global", default = false)
-  val printResult = argument("printResult", default = false)
-  val hidden = argument("hidden", default = false)
-  val `class` = argument("class", default = false)
-  val section = argument("section", default = false)
+  val `type` = argument("type", default = false)
+  val value = argument("value", default = false)
+  val file = argument("file", default = false)
+  val result = argument("result", default = false)
 
   override val name = "scala"
 
   override def documentNode(conversion: Conversion,
                             tag: input.tree.Tag): document.tree.Scala = {
-    val globalValue = global.getBooleanOpt(conversion, tag).getOrElse(false)
-    var printResultValue = printResult.getBooleanOpt(conversion, tag).getOrElse(false)
-
-    if (globalValue && printResultValue) {
-      conversion.errata.error(
-        "The attributes 'global' and 'printResult' are incompatible", tag)
-      printResultValue = false
-    }
-
     document.tree.Scala(
-      id.getStringOpt(conversion, tag).getOrElse(conversion.listingId()),
-      project.getStringOpt(conversion, tag),
-      globalValue,
-      printResultValue,
-      hidden.getBooleanOpt(conversion, tag).getOrElse(false),
-      `class`.getStringOpt(conversion, tag),
-      section.getStringOpt(conversion, tag),
-      TextHelpers.reindent(tag.text))
+      `type`.getStringOpt(conversion, tag) match {
+        case None => ScalaType.Code
+        case Some("code") => ScalaType.Code
+        case Some("imports") => ScalaType.Imports
+        case Some("object") => ScalaType.Object
+        case Some("class") => ScalaType.Class
+        case Some("case class") => ScalaType.CaseClass
+        case Some("trait") => ScalaType.Trait
+        case Some("section") => ScalaType.Section
+        case Some(t) =>
+          conversion.errata.error(s"Scala type `$t` unknown", tag)
+          ScalaType.Code
+      },
+      value.getStringOpt(conversion, tag).getOrElse(""),
+      Some(TextHelpers.reindent(tag.text)),
+      file.getStringOpt(conversion, tag),
+      result.getStringOpt(conversion, tag))
   }
-}
-
-case object Sbt extends Instruction[document.tree.Sbt] {
-  val project = argument("project", default = false)
-  val hidden = argument("hidden", default = false)
-
-  override val name = "sbt"
-
-  override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Sbt =
-    document.tree.Sbt(
-      conversion.listingId(),
-      project.getStringOpt(conversion, tag),
-      hidden.getBooleanOpt(conversion, tag).getOrElse(false),
-      TextHelpers.reindent(tag.text))
 }
 
 case object Shell extends Instruction[document.tree.Shell] {
@@ -268,9 +261,7 @@ case object Shell extends Instruction[document.tree.Shell] {
 
   override def documentNode(conversion: Conversion,
                             tag: input.tree.Tag): document.tree.Shell =
-    document.tree.Shell(
-      conversion.listingId(),
-      TextHelpers.reindent(tag.text))
+    document.tree.Shell(TextHelpers.reindent(tag.text))
 }
 
 case object Todo extends Instruction[document.tree.Todo] {
@@ -342,7 +333,7 @@ object BlogInstructionSet extends InstructionSet {
 }
 
 object CodeInstructionSet extends InstructionSet {
-  override val instructions: Set[Instruction[_]] = Set(Scala, Sbt, Shell)
+  override val instructions: Set[Instruction[_]] = Set(Package, Scala, Shell)
 }
 
 object DraftInstructionSet extends InstructionSet {

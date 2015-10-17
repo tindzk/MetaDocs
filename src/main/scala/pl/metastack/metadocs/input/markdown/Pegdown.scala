@@ -5,8 +5,10 @@ import scala.collection.JavaConversions._
 import org.pegdown.{Extensions, PegDownProcessor}
 import org.pegdown.ast._
 
+import pl.metastack.metadocs.input
 import pl.metastack.metadocs.document
-import pl.metastack.metadocs.input.TextHelpers
+
+case class Conversion(generateId: String => Option[String])
 
 object Pegdown {
   def level(node: document.tree.Node): Int =
@@ -17,13 +19,16 @@ object Pegdown {
       case _ => 0
     }
 
-  def parse(input: String): document.tree.Node = {
+  def parse(input: String,
+            conversion: Conversion = Conversion(_ => None)): document.tree.Root = {
     val processor = new PegDownProcessor(Extensions.ALL)
     val root = processor.parseMarkdown(input.toCharArray)
-    val ast = dispatch(root)
+    val ast = dispatch(root, conversion)
 
     ast.map { node =>
-      node.updateChildren(node.children.foldRight(Seq.empty[document.tree.Node]) { case (cur, acc) =>
+      node.updateChildren(node.children
+        .foldRight(Seq.empty[document.tree.Node])
+      { case (cur, acc) =>
         if (acc.isEmpty) Seq(cur)
         else {
           val curLevel = level(cur)
@@ -34,146 +39,222 @@ object Pegdown {
           } else cur +: acc
         }
       })
-    }
+    }.asInstanceOf[document.tree.Root]
   }
 
-  def visit(node: TextNode): document.tree.Node =
+  def replacePlaceholders(root: document.tree.Root,
+                          placeholders: Seq[document.tree.Node]): document.tree.Root = {
+    val number = "%\\d+"
+    def split(s: String) = s.replaceAll(number, "_$0_").split("_")
+
+    val result = root.flatMap {
+      case t: document.tree.Text =>
+        split(t.text).map { part =>
+          if (part.matches(number)) placeholders(part.tail.toInt - 1)
+          else document.tree.Text(part)
+        }
+
+      case n => Seq(n)
+    }
+
+    assert(result.size == 1)
+    result.head.asInstanceOf[document.tree.Root]
+  }
+
+  def parseWithExtensions(ipt: String,
+                          instructionSet: input.InstructionSet,
+                          conversion: Conversion = Conversion(_ => None)
+                         ): document.tree.Root = {
+    val (parsedInput, placeholders) = input.markdown.BlockParser.replace(ipt)
+
+    val inputConversion = new input.Conversion(instructionSet, conversion.generateId)
+    val parsedPlaceholders = placeholders.map(inputConversion.convertTag)
+
+    replacePlaceholders(parse(parsedInput, conversion), parsedPlaceholders)
+  }
+
+  def visit(node: TextNode, conversion: Conversion): document.tree.Node =
     document.tree.Text(node.getText)
 
-  def visit(node: WikiLinkNode): document.tree.Node = ???
+  def visit(node: WikiLinkNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: VerbatimNode): document.tree.Node = {
+  def visit(node: VerbatimNode, conversion: Conversion): document.tree.Node = {
     if (node.getType == "scala")
-      document.tree.Scala(code = TextHelpers.reindent(node.getText))
+      document.tree.Scala(code = Some(input.TextHelpers.reindent(node.getText)))
+    else if (node.getType == "bash")
+      document.tree.Shell(code = input.TextHelpers.reindent(node.getText))
     else throw new RuntimeException(s"Unknown type in verbatim node: ${node.getType}")
   }
 
-  def visit(node: TableRowNode): document.tree.Node = ???
-
-  def visit(node: TableNode): document.tree.Node = ???
-
-  def visit(node: TableHeaderNode): document.tree.Node = ???
-
-  def visit(node: TableColumnNode): document.tree.Node = ???
-
-  def visit(node: TableCellNode): document.tree.Node = ???
-
-  def visit(node: TableCaptionNode): document.tree.Node = ???
-
-  def visit(node: TableBodyNode): document.tree.Node = ???
-
-  def visit(node: StrongEmphSuperNode): document.tree.Node =
-    if (node.isStrong) document.tree.Bold(node.getChildren.map(dispatch): _*)
-    else ???
-
-  def visit(node: AnchorLinkNode): document.tree.Node =
-    document.tree.Jump(node.getName, Some(getText(node)))  // TODO Test case
-
-  def visit(node: StrikeNode): document.tree.Node = ???
-
-  def visit(node: HtmlBlockNode): document.tree.Node = ???
-
-  def getText(node: Node): String =
-    node.getChildren.head.asInstanceOf[TextNode].getText
-
-  def visit(node: HeaderNode): document.tree.Node =
-    node.getLevel match {
-      case 1 => document.tree.Chapter(None, getText(node))
-      case 2 => document.tree.Section(None, getText(node))
-      case 3 => document.tree.Subsection(None, getText(node))
+  def visit(node: TableNode, conversion: Conversion): document.tree.Node = {
+    def processRow(node: Node): document.tree.Row = {
+      val row = node.asInstanceOf[TableRowNode]
+      val columns = row.getChildren.collect {
+        case c: TableCellNode =>
+          document.tree.Column(c.getChildren.map(dispatch(_, conversion)): _*)
+      }
+      document.tree.Row(columns: _*)
     }
 
-  def visit(node: ExpLinkNode): document.tree.Node =
-    document.tree.Url(node.url, superChildren(node).map(dispatch): _*)
+    val header = node.getChildren.collectFirst {
+      case header: TableHeaderNode => processRow(header.getChildren.head)
+    }
 
-  def visit(node: ExpImageNode): document.tree.Node =
+    val body = node.getChildren.collect {
+      case body: TableBodyNode => body.getChildren.map(processRow)
+    }.flatten
+
+    document.tree.Table(header.get, body: _*)
+  }
+
+  def visit(node: StrongEmphSuperNode, conversion: Conversion): document.tree.Node =
+    if (node.isClosed) {
+      if (node.isStrong) document.tree.Bold(node.getChildren.map(dispatch(_, conversion)): _*)
+      else document.tree.Italic(node.getChildren.map(dispatch(_, conversion)): _*)
+    } else document.tree.Text(node.getChars)
+
+  def visit(node: AnchorLinkNode, conversion: Conversion): document.tree.Node = ???
+
+  def visit(node: StrikeNode, conversion: Conversion): document.tree.Node = ???
+
+  def visit(node: HtmlBlockNode, conversion: Conversion): document.tree.Node = ???
+
+  def childrenText(node: Node): String =
+    node.getChildren.collect {
+      case t: TextNode => t.getText
+    }.mkString("")
+
+  def superChildrenText(node: Node): String =
+    superChildren(node).collect {
+      case t: TextNode => t.getText
+    }.mkString("")
+
+  def visit(node: HeaderNode, conversion: Conversion): document.tree.Node =
+    node.getLevel match {
+      case 1 => document.tree.Chapter(
+        conversion.generateId(childrenText(node)), childrenText(node))
+      case 2 => document.tree.Section(
+        conversion.generateId(childrenText(node)), childrenText(node))
+      case 3 => document.tree.Subsection(
+        conversion.generateId(childrenText(node)), childrenText(node))
+    }
+
+  def visit(node: RefLinkNode, conversion: Conversion): document.tree.Node = {
+    val url = superChildrenText(node)
+    if (url.head == '#') document.tree.Jump(url.tail, None)
+    else document.tree.Url(url)
+  }
+
+  def visit(node: ExpLinkNode, conversion: Conversion): document.tree.Node = {
+    if (node.url.head == '#')
+      document.tree.Jump(node.url.tail, Some(superChildrenText(node)))
+    else document.tree.Url(node.url, superChildren(node).map(dispatch(_, conversion)): _*)
+  }
+
+  def visit(node: ExpImageNode, conversion: Conversion): document.tree.Node =
     document.tree.Image(node.url)
 
-  def visit(node: DefinitionTermNode): document.tree.Node = ???
+  def visit(node: DefinitionTermNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: DefinitionNode): document.tree.Node = ???
+  def visit(node: DefinitionNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: DefinitionListNode): document.tree.Node = ???
+  def visit(node: DefinitionListNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: CodeNode): document.tree.Node =
+  def visit(node: CodeNode, conversion: Conversion): document.tree.Node =
     document.tree.Code(document.tree.Text(node.getText))
 
-  def visit(node: BulletListNode): document.tree.Node =
+  def visit(node: BulletListNode, conversion: Conversion): document.tree.Node =
     document.tree.List(
       node.getChildren
-        .map(dispatch(_).asInstanceOf[document.tree.ListItem]): _*
+        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*
     )
 
-  def visit(node: OrderedListNode): document.tree.Node =
+  def visit(node: OrderedListNode, conversion: Conversion): document.tree.Node =
     document.tree.List(
       superChildren(node)
-        .map(dispatch(_).asInstanceOf[document.tree.ListItem]): _*
+        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*
     )
 
-  def visit(node: BlockQuoteNode): document.tree.Node = ???
+  def visit(node: BlockQuoteNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: AutoLinkNode): document.tree.Node = ???
+  def visit(node: AutoLinkNode, conversion: Conversion): document.tree.Node =
+    document.tree.Url(node.getText, node.getChildren.map(dispatch(_, conversion)): _*)
 
-  def visit(node: AbbreviationNode): document.tree.Node = ???
+  def visit(node: AbbreviationNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: InlineHtmlNode): document.tree.Node = ???
+  def visit(node: InlineHtmlNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: ListItemNode): document.tree.Node =
-    document.tree.ListItem(rootSuperChildren(node).map(dispatch): _*)
+  def visit(node: ListItemNode, conversion: Conversion): document.tree.Node =
+    document.tree.ListItem(rootSuperChildren(node).map(dispatch(_, conversion)): _*)
 
-  def visit(node: MailLinkNode): document.tree.Node = ???
+  def visit(node: MailLinkNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: ParaNode): document.tree.Node =
-    document.tree.Paragraph(superChildren(node).map(dispatch): _*)
+  def visit(node: ParaNode, conversion: Conversion): document.tree.Node =
+    document.tree.Paragraph(superChildren(node).map(dispatch(_, conversion)): _*)
 
-  def visit(node: QuotedNode): document.tree.Node = ???
+  def visit(node: QuotedNode, conversion: Conversion): document.tree.Node =
+    node.getType match {
+      case QuotedNode.Type.DoubleAngle =>
+        document.tree.Text("«" + childrenText(node) + "»")
+      case QuotedNode.Type.Double =>
+        document.tree.Text("\"" + childrenText(node) + "\"")
+      case QuotedNode.Type.Single =>
+        document.tree.Text("'" + childrenText(node) + "'")
+    }
 
-  def visit(node: ReferenceNode): document.tree.Node = ???
+  def visit(node: ReferenceNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: RefImageNode): document.tree.Node = ???
+  def visit(node: RefImageNode, conversion: Conversion): document.tree.Node = ???
 
-  def visit(node: RefLinkNode): document.tree.Node = ???
+  def visit(node: SimpleNode, conversion: Conversion): document.tree.Node = {
+    val text = node.getType match {
+      case SimpleNode.Type.Apostrophe => "’"
+      case SimpleNode.Type.Ellipsis => "…"
+      case SimpleNode.Type.Emdash => "—"
+      case SimpleNode.Type.Endash => "–"
+      case SimpleNode.Type.HRule => "<hr/>"  // TODO
+      case SimpleNode.Type.Linebreak => "\n"
+      case SimpleNode.Type.Nbsp => " "
+    }
 
-  def visit(node: RootNode): document.tree.Root =
-    document.tree.Root(node.getChildren.map(dispatch): _*)
+    document.tree.Text(text)
+  }
 
-  def dispatch(node: Node): document.tree.Node =
+  def visit(node: RootNode, conversion: Conversion): document.tree.Root =
+    document.tree.Root(node.getChildren.map(dispatch(_, conversion)): _*)
+
+  def dispatch(node: Node, conversion: Conversion): document.tree.Node =
     node match {
-      case n: WikiLinkNode => visit(n)
-      case n: VerbatimNode => visit(n)
-      case n: TableRowNode => visit(n)
-      case n: TableNode => visit(n)
-      case n: TableHeaderNode => visit(n)
-      case n: TableColumnNode => visit(n)
-      case n: TableCellNode => visit(n)
-      case n: TableCaptionNode => visit(n)
-      case n: TableBodyNode => visit(n)
-      case n: StrongEmphSuperNode => visit(n)
-      case n: AnchorLinkNode => visit(n)
-      case n: StrikeNode => visit(n)
-      case n: HtmlBlockNode => visit(n)
-      case n: HeaderNode => visit(n)
-      case n: ExpLinkNode => visit(n)
-      case n: ExpImageNode => visit(n)
-      case n: DefinitionTermNode => visit(n)
-      case n: DefinitionNode => visit(n)
-      case n: DefinitionListNode => visit(n)
-      case n: CodeNode => visit(n)
-      case n: BulletListNode => visit(n)
-      case n: BlockQuoteNode => visit(n)
-      case n: AutoLinkNode => visit(n)
-      case n: AbbreviationNode => visit(n)
-      case n: InlineHtmlNode => visit(n)
-      case n: ListItemNode => visit(n)
-      case n: MailLinkNode => visit(n)
-      case n: OrderedListNode => visit(n)
-      case n: ParaNode => visit(n)
-      case n: QuotedNode => visit(n)
-      case n: ReferenceNode => visit(n)
-      case n: RefImageNode => visit(n)
-      case n: RefLinkNode => visit(n)
-      case n: RootNode => visit(n)
-      case n: TextNode => visit(n)
+      case n: WikiLinkNode => visit(n, conversion)
+      case n: VerbatimNode => visit(n, conversion)
+      case n: TableNode => visit(n, conversion)
+      case n: StrongEmphSuperNode => visit(n, conversion)
+      case n: AnchorLinkNode => visit(n, conversion)
+      case n: StrikeNode => visit(n, conversion)
+      case n: HtmlBlockNode => visit(n, conversion)
+      case n: HeaderNode => visit(n, conversion)
+      case n: ExpLinkNode => visit(n, conversion)
+      case n: ExpImageNode => visit(n, conversion)
+      case n: DefinitionTermNode => visit(n, conversion)
+      case n: DefinitionNode => visit(n, conversion)
+      case n: DefinitionListNode => visit(n, conversion)
+      case n: CodeNode => visit(n, conversion)
+      case n: BulletListNode => visit(n, conversion)
+      case n: BlockQuoteNode => visit(n, conversion)
+      case n: AutoLinkNode => visit(n, conversion)
+      case n: AbbreviationNode => visit(n, conversion)
+      case n: InlineHtmlNode => visit(n, conversion)
+      case n: ListItemNode => visit(n, conversion)
+      case n: MailLinkNode => visit(n, conversion)
+      case n: OrderedListNode => visit(n, conversion)
+      case n: ParaNode => visit(n, conversion)
+      case n: QuotedNode => visit(n, conversion)
+      case n: ReferenceNode => visit(n, conversion)
+      case n: RefImageNode => visit(n, conversion)
+      case n: RefLinkNode => visit(n, conversion)
+      case n: RootNode => visit(n, conversion)
+      case n: TextNode => visit(n, conversion)
+      case n: SimpleNode => visit(n, conversion)
       case n => throw new RuntimeException(s"Unknown node '$n'")
     }
 

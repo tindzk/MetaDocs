@@ -3,37 +3,15 @@ package pl.metastack.metadocs.document
 import java.io.File
 
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
 
 import pl.metastack.{metaweb => web}
 
 import pl.metastack.metadocs._
-import pl.metastack.metadocs.input.InstructionSet
-import pl.metastack.metadocs.input.tree.Root
 
 object Document {
-  def loadFile(format: input.Format, filePath: String): Try[Root] = {
-    val contents = io.Source.fromFile(new File(filePath)).mkString
-    format match {
-      case input.Format.Markdown =>
-        Try(input.markdown.Pegdown.parse(contents)).map(_.asInstanceOf[Root])
-      case input.Format.MetaDocs => input.Parser.parse(contents)
-    }
-  }
-
   /** Merge trees of loaded files */
-  def loadFiles(format: input.Format, filePaths: Seq[String]): Root =
-    Root(
-      filePaths.flatMap { filePath =>
-        loadFile(format, filePath) match {
-          case Success(root) => root.children
-          case Failure(error) =>
-            println(s"File $filePath could not be parsed:")
-            println(error)
-            Seq.empty
-        }
-      }
-    )
+  def mergeTrees(trees: Seq[tree.Root]): tree.Root =
+    tree.Root(trees.flatMap(_.children): _*)
 
   def uniqueIds(root: tree.Root): tree.Root = {
     val collectedIds = mutable.HashMap.empty[String, Int]
@@ -102,22 +80,10 @@ object Document {
     }.asInstanceOf[tree.Root]
   }
 
-  /**
-   * @param generateId If the ID of a structural element (chapter, section etc.)
-   *                   is missing, this function will be called with the caption.
-   */
-  def toDocumentTree(root: Root,
-                     instructionSet: InstructionSet,
-                     generateId: String => Option[String] = _ => None): tree.Root = {
-    val conversion = new input.Conversion(instructionSet, generateId)
-    val pipeline =
-      (conversion.convertRoot _)
-        .andThen(uniqueIds)
-        .andThen(validateJumps)
-        .andThen(footnoteIds)
-
-    pipeline(root)
-  }
+  val pipeline =
+    (uniqueIds _)
+      .andThen(validateJumps)
+      .andThen(footnoteIds)
 
   def printTodos(root: document.tree.Root) {
     def iterate(node: document.tree.Node) {
@@ -133,7 +99,7 @@ object Document {
   def writeHtml(filePath: File, id: String, root: web.tree.Node) {
     import pl.metastack.metaweb._
     FileUtils.printToFile(new File(filePath, s"$id.html")) { fw =>
-      fw.write(root.state(web.state.OneWay).toHtml)
+      fw.write(root.state.toHtml)
     }
   }
 
@@ -142,7 +108,7 @@ object Document {
     FileUtils.printToFile(new File(filePath, s"$id.xml")) { fw =>
       fw.write(
         """<?xml version="1.0" encoding="UTF-8"?>""" + "\n" +
-        root.state(web.state.OneWay).toHtml
+        root.state.toHtml
       )
     }
   }

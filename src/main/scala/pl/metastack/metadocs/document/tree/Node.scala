@@ -7,7 +7,9 @@ trait Node {
   def text: String = children.map(_.text).mkString
 
   def children: Seq[Node]
+
   def map(f: Node => Node): Node
+  def flatMap(f: Node => Seq[Node]): Seq[Node]
 
   def updateChildren(children: Seq[Node]): Node
 }
