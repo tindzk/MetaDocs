@@ -42,21 +42,26 @@ object Blog {
   def index(root: tree.Root,
             meta: Meta,
             header: Option[web.tree.Node],
+            bodyHeader: Option[web.tree.Node],
             footer: Option[web.tree.Node],
-            referenceUrl: String => String) = {
+            referenceUrl: String => String): web.tree.Node = {
+    val headerT: web.tree.Node = header.getOrElse(web.tree.Null)
+    val bodyHeaderT: web.tree.Node = bodyHeader.getOrElse(web.tree.Null)
     val content = postList(root, meta, referenceUrl)
-
     val footerT: web.tree.Node = footer.map { ft =>
       htmlT"""<footer class="clearfix" id="footer">$ft</footer>"""
     }.getOrElse(web.tree.Null)
 
     web.tree.Container(Seq(
-      header.getOrElse(web.tree.Null),
+      headerT,
       htmlT"""
-      <section id="wrapper" class="home">
-        $content
-        $footerT
-      </section>
+      <div id="wrapper">
+        $bodyHeaderT
+        <section class="home">
+          $content
+          $footerT
+        </section>
+      </div>
       """
     ))
   }
@@ -149,6 +154,7 @@ object Blog {
             skeleton: Components.Skeleton,
             pageFooter: Option[web.tree.Node],
             indexHeader: Option[web.tree.Node],
+            indexBodyHeader: Option[web.tree.Node],
             postHeader: Option[web.tree.Node],
             postFooter: Option[tree.Post => web.tree.Node],
             outputPath: String,
@@ -169,7 +175,8 @@ object Blog {
 
     val writer = new Writer(referenceUrl)
 
-    val indexBody = index(root, meta, indexHeader, pageFooter, referenceUrl)
+    val indexBody = index(root, meta, indexHeader, indexBodyHeader, pageFooter,
+      referenceUrl)
     val indexResult = skeleton(Some(meta), None, indexBody)
     Document.writeHtml(filePath, "index", indexResult)
 
