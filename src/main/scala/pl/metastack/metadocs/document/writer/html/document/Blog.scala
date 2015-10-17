@@ -10,6 +10,10 @@ import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
 object Blog {
+  /** Absolute post URL */
+  def postUrl(meta: Meta, post: tree.Post): String =
+    s"${meta.url}${post.id.get}.html"
+
   def postList(root: tree.Root, meta: Meta, referenceUrl: String => String): web.tree.Node = {
     def iterate(node: tree.Node): Option[web.tree.Node] =
       node match {
@@ -65,6 +69,8 @@ object Blog {
            post: tree.Post): web.tree.Node = {
     val dateFmt = post.date.toString("MMMM MM, YYYY", meta.locale)
 
+    val avatarT: web.tree.Node = meta.avatar.map(src =>
+      htmlT"""<img class="avatar" src=$src />""").getOrElse(web.tree.Null)
     val headerT = header.getOrElse(web.tree.Null)
     val footerT = footer.getOrElse(web.tree.Null)
     val pageFooterT: web.tree.Node = pageFooter.getOrElse(web.tree.Null)
@@ -92,7 +98,7 @@ object Blog {
         $body
         $footnotesT
         <footer id="post-meta" class="clearfix">
-          <img class="avatar" src="assets/images/avatar.png" />
+          $avatarT
           <div>
             <span class="dark">${meta.author}</span>
             <span>${meta.`abstract`}</span>
@@ -108,7 +114,7 @@ object Blog {
   def feed(meta: Meta, posts: Seq[tree.Post]): web.tree.Tag = {
     def encodePost(post: tree.Post): web.tree.Tag = {
       val date = post.date.toString("E, d MMM yyyy HH:mm:ss Z", meta.locale)
-      val url = s"${meta.url}/${post.id.get}.html"
+      val url = postUrl(meta, post)
       htmlT"""
         <item>
           <title>${post.title}</title>
