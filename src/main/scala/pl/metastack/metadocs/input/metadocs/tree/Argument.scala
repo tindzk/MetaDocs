@@ -1,4 +1,4 @@
-package pl.metastack.metadocs.input.tree
+package pl.metastack.metadocs.input.metadocs.tree
 
 sealed trait Argument
 object Argument {

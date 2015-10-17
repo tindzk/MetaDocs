@@ -1,8 +1,8 @@
-package pl.metastack.metadocs.input
-
-import fastparse.core
+package pl.metastack.metadocs.input.metadocs
 
 import minitest._
+
+import fastparse.core
 
 object ParserSpec extends SimpleTestSuite {
   import Parser._  // Import all parser rules

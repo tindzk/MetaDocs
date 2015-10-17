@@ -5,8 +5,8 @@ import scala.collection.JavaConversions._
 import org.pegdown.{Extensions, PegDownProcessor}
 import org.pegdown.ast._
 
-import pl.metastack.metadocs.input
-import pl.metastack.metadocs.document
+import pl.metastack.metadocs.{TextHelpers, input, document}
+import pl.metastack.metadocs.input.metadocs.InstructionSet
 
 case class Conversion(generateId: String => Option[String])
 
@@ -62,12 +62,13 @@ object Pegdown {
   }
 
   def parseWithExtensions(ipt: String,
-                          instructionSet: input.InstructionSet,
+                          instructionSet: InstructionSet,
                           conversion: Conversion = Conversion(_ => None)
                          ): document.tree.Root = {
     val (parsedInput, placeholders) = input.markdown.BlockParser.replace(ipt)
 
-    val inputConversion = new input.Conversion(instructionSet, conversion.generateId)
+    val inputConversion = new input.metadocs.Conversion(
+      instructionSet, conversion.generateId)
     val parsedPlaceholders = placeholders.map(inputConversion.convertTag)
 
     replacePlaceholders(parse(parsedInput, conversion), parsedPlaceholders)
@@ -80,9 +81,9 @@ object Pegdown {
 
   def visit(node: VerbatimNode, conversion: Conversion): document.tree.Node = {
     if (node.getType == "scala")
-      document.tree.Scala(code = Some(input.TextHelpers.reindent(node.getText)))
+      document.tree.Scala(code = Some(TextHelpers.reindent(node.getText)))
     else if (node.getType == "bash")
-      document.tree.Shell(code = input.TextHelpers.reindent(node.getText))
+      document.tree.Shell(code = TextHelpers.reindent(node.getText))
     else throw new RuntimeException(s"Unknown type in verbatim node: ${node.getType}")
   }
 

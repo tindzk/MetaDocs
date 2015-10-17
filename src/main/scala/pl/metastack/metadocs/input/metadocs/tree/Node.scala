@@ -1,6 +1,6 @@
-package pl.metastack.metadocs.input.tree
+package pl.metastack.metadocs.input.metadocs.tree
 
-import pl.metastack.metadocs.input.Errata
+import pl.metastack.metadocs.Errata
 
 sealed trait Node {
   def text: String

@@ -1,10 +1,12 @@
-package pl.metastack.metadocs.document.writer.html
+package pl.metastack.metadocs.output.html
 
 import org.joda.time.DateTime
-import pl.metastack.metadocs.document.{tree, Meta}
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
+
+import pl.metastack.metadocs.output.HTML
+import pl.metastack.metadocs.document.{tree, Meta}
 
 object Components {
   def bodyWrapper(body: web.tree.Node) = {
@@ -59,7 +61,7 @@ object Components {
     else htmlT"""<nav id="toc"><ul>$toc</ul></nav>"""
   }
 
-  def footnotes(writer: Writer,
+  def footnotes(writer: HTML,
                 footnotes: Seq[tree.Footnote],
                 hr: Boolean = true): web.tree.Node =
     if (footnotes.isEmpty) web.tree.Null

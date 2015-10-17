@@ -16,7 +16,7 @@ object Markdown {
   }
 
   def loadFileWithExtensions(file: File,
-                             instructionSet: input.InstructionSet,
+                             instructionSet: metadocs.InstructionSet,
                              generateId: String => Option[String] = _ => None): Try[Root] = {
     val contents = io.Source.fromFile(file).mkString
     Try(

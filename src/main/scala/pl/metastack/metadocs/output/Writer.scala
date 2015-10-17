@@ -1,4 +1,4 @@
-package pl.metastack.metadocs.document.writer
+package pl.metastack.metadocs.output
 
 import pl.metastack.metadocs.document.tree
 

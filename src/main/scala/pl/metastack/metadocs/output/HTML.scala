@@ -1,12 +1,12 @@
-package pl.metastack.metadocs.document.writer.html
-
-import pl.metastack.metadocs.document.tree
-import pl.metastack.metarx.Var
+package pl.metastack.metadocs.output
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
-class Writer(referenceUrl: String => String) {
+import pl.metastack.metadocs.document.tree
+import pl.metastack.metadocs.output.html.WebWriter
+
+class HTML(referenceUrl: String => String) {
   def children(n: tree.Node) = n.children.map(node.write)
 
   val headerColumn = WebWriter[tree.Column] { column =>

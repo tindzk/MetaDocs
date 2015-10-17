@@ -4,30 +4,30 @@ import scala.util.Success
 
 import minitest.SimpleTestSuite
 
-import pl.metastack.metadocs.input
 import pl.metastack.metadocs.document.tree._
+import pl.metastack.metadocs.input.metadocs.tree
 
 object PegdownSpec extends SimpleTestSuite {
   test("Parse block extension") {
     assertEquals(BlockParser.parse("""[tag key="value"]"""),
-      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "value")))))
+      Success(tree.Tag("tag", Seq(tree.Argument.Named("key", "value")))))
 
     assertEquals(BlockParser.parse("""[tag   key="value"]"""),
-      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "value")))))
+      Success(tree.Tag("tag", Seq(tree.Argument.Named("key", "value")))))
 
     assertEquals(BlockParser.parse("""[tag   key="val ue"]"""),
-      Success(input.tree.Tag("tag", Seq(input.tree.Argument.Named("key", "val ue")))))
+      Success(tree.Tag("tag", Seq(tree.Argument.Named("key", "val ue")))))
 
     assertEquals(BlockParser.parse("""[tag key="value" key2="value2"]"""),
-      Success(input.tree.Tag("tag", Seq(
-        input.tree.Argument.Named("key", "value"),
-        input.tree.Argument.Named("key2", "value2")
+      Success(tree.Tag("tag", Seq(
+        tree.Argument.Named("key", "value"),
+        tree.Argument.Named("key2", "value2")
       ))))
 
     assertEquals(BlockParser.parse("""[tag key="value"   key2="value2"]"""),
-      Success(input.tree.Tag("tag", Seq(
-        input.tree.Argument.Named("key", "value"),
-        input.tree.Argument.Named("key2", "value2")
+      Success(tree.Tag("tag", Seq(
+        tree.Argument.Named("key", "value"),
+        tree.Argument.Named("key2", "value2")
       ))))
   }
 
@@ -39,8 +39,8 @@ object PegdownSpec extends SimpleTestSuite {
     assertEquals(
       BlockParser.replace("""a [tag key="value"] b"""),
       ("a %1 b",
-        Seq(input.tree.Tag("tag",
-          Seq(input.tree.Argument.Named("key", "value"))))))
+        Seq(tree.Tag("tag",
+          Seq(tree.Argument.Named("key", "value"))))))
   }
 
   test("Don't replace in code blocks") {

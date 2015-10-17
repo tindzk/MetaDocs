@@ -1,13 +1,15 @@
-package pl.metastack.metadocs.document.writer.html.document
+package pl.metastack.metadocs.output.html.document
 
 import java.io.File
 
 import org.joda.time.DateTime
-import pl.metastack.metadocs.document.{Document, tree, Meta, Extractors}
-import pl.metastack.metadocs.document.writer.html.{Components, Writer}
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
+
+import pl.metastack.metadocs.output.HTML
+import pl.metastack.metadocs.output.html.Components
+import pl.metastack.metadocs.document.{Document, tree, Meta, Extractors}
 
 object Blog {
   /** Absolute post URL */
@@ -66,7 +68,7 @@ object Blog {
     ))
   }
 
-  def post(writer: Writer,
+  def post(writer: HTML,
            meta: Meta,
            pageFooter: Option[web.tree.Node],
            header: Option[web.tree.Node],
@@ -173,7 +175,7 @@ object Blog {
       s"${post.id.get}.html$anchor"
     }
 
-    val writer = new Writer(referenceUrl)
+    val writer = new HTML(referenceUrl)
 
     val indexBody = index(root, meta, indexHeader, indexBodyHeader, pageFooter,
       referenceUrl)

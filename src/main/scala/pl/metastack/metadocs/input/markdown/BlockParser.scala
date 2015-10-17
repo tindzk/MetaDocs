@@ -5,7 +5,8 @@ import scala.util.Try
 
 import fastparse.all._
 
-import pl.metastack.metadocs.input.{Parser, tree}
+import pl.metastack.metadocs.input.metadocs.Parser
+import pl.metastack.metadocs.input.metadocs.tree
 
 /** Markdown extension allowing to specify blocks such as:
   * [scala type="imports" name="GettingStartedDatastore"]

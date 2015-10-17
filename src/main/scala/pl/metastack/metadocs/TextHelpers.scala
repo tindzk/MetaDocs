@@ -1,8 +1,8 @@
-package pl.metastack.metadocs.input
+package pl.metastack.metadocs
 
 import scala.collection.mutable
 
-import pl.metastack.metadocs.document
+import pl.metastack.metadocs.document.tree
 
 object TextHelpers {
   def reindent(text: String): String = {
@@ -23,25 +23,25 @@ object TextHelpers {
     }
   }
 
-  def detectParagraphs(nodes: Seq[document.tree.Node]): Seq[document.tree.Node] = {
-    def cutParagraph(nodes: Seq[document.tree.Node]):
-    (Seq[document.tree.Node], Seq[document.tree.Node]) = {
+  def detectParagraphs(nodes: Seq[tree.Node]): Seq[tree.Node] = {
+    def cutParagraph(nodes: Seq[tree.Node]):
+      (Seq[tree.Node], Seq[tree.Node]) = {
 
-      val paragraph = mutable.ArrayBuffer.empty[document.tree.Node]
-      val rest = mutable.ArrayBuffer.empty[document.tree.Node]
+      val paragraph = mutable.ArrayBuffer.empty[tree.Node]
+      val rest = mutable.ArrayBuffer.empty[tree.Node]
       var accumulatingRest = false
 
       nodes.foreach {
         case node if accumulatingRest => rest += node
 
-        case node @ document.tree.Text(text) =>
+        case node @ tree.Text(text) =>
           val paragraphs = text.split("\n\n")
             .filter(_.trim.nonEmpty)
 
           if (paragraphs.length <= 1) paragraph += node
           else {
-            paragraph += document.tree.Text(paragraphs.head)
-            rest += document.tree.Text(paragraphs.tail.mkString("\n\n"))
+            paragraph += tree.Text(paragraphs.head)
+            rest += tree.Text(paragraphs.tail.mkString("\n\n"))
             accumulatingRest = true
           }
 
@@ -55,7 +55,7 @@ object TextHelpers {
       (paragraph, rest)
     }
 
-    val result = mutable.ArrayBuffer.empty[document.tree.Node]
+    val result = mutable.ArrayBuffer.empty[tree.Node]
 
     var n = nodes
     while (n.nonEmpty) {
@@ -63,21 +63,21 @@ object TextHelpers {
       n =
         if (parag.nonEmpty) {
           if (parag.exists {
-            case node @ document.tree.Text(text) => text.trim.nonEmpty
+            case node @ tree.Text(text) => text.trim.nonEmpty
             case _ => true
           }) {
             val trimmed = parag.zipWithIndex.map {
-              case (node @ document.tree.Text(text), i)
-                if i == 0 => document.tree.Text(text.dropWhile(_.isWhitespace))
+              case (node @ tree.Text(text), i)
+                if i == 0 => tree.Text(text.dropWhile(_.isWhitespace))
 
-              case (node @ document.tree.Text(text), i)
+              case (node @ tree.Text(text), i)
                 if i == parag.length - 1 =>
-                document.tree.Text(text.reverse.dropWhile(_.isWhitespace).reverse)
+                tree.Text(text.reverse.dropWhile(_.isWhitespace).reverse)
 
               case (node, i) => node
             }
 
-            result += document.tree.Paragraph(trimmed: _*)
+            result += tree.Paragraph(trimmed: _*)
           }
 
           rest

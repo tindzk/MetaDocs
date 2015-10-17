@@ -1,14 +1,14 @@
-package pl.metastack.metadocs.document.writer.html.document
+package pl.metastack.metadocs.output.html.document
 
 import java.io.File
 
-import pl.metastack.metadocs.document._
-import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.writer.html.Writer
-
+import pl.metastack.metadocs.output.HTML
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
-import pl.metastack.metadocs.document.writer.html.Components
+
+import pl.metastack.metadocs.document._
+import pl.metastack.metadocs.document.tree
+import pl.metastack.metadocs.output.html.Components
 
 object Book {
   def index(root: tree.Root,
@@ -25,7 +25,7 @@ object Book {
   }
 
   def chapter(meta: Option[Meta],
-              writer: Writer,
+              writer: HTML,
               chapters: Seq[tree.Chapter],
               chapter: tree.Chapter): web.tree.Node = {
     val footnotes = Extractors.footnotes(chapter)
@@ -68,7 +68,7 @@ object Book {
       s"${chapter.id.get}.html$anchor"
     }
 
-    val writer = new Writer(referenceUrl)
+    val writer = new HTML(referenceUrl)
 
     val indexBody = index(root, meta, tocDepth, referenceUrl)
     val indexResult = skeleton(meta, None, indexBody)

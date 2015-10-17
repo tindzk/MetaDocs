@@ -1,35 +1,36 @@
-package pl.metastack.metadocs.input
+package pl.metastack.metadocs.input.metadocs
 
 import org.joda.time.format.DateTimeFormat
+
 import pl.metastack.metadocs.document.tree.ScalaType
-import pl.metastack.metadocs.{document, input}
+import pl.metastack.metadocs.{TextHelpers, document}
 
 case class ArgumentParser(name: String, default: Boolean) {
-  def getStringOpt(conversion: Conversion, tag: input.tree.Tag): Option[String] = {
+  def getStringOpt(conversion: Conversion, tag: tree.Tag): Option[String] = {
     val value = tag.argumentValue(name)
     if (default) value.orElse(tag.defaultArgument(conversion.errata))
     else value
   }
 
-  def getString(conversion: Conversion, tag: input.tree.Tag): String =
+  def getString(conversion: Conversion, tag: tree.Tag): String =
     getStringOpt(conversion, tag).getOrElse {
       conversion.errata.error(s"Argument '$name' was not set", tag)
       ""
     }
 
-  def getIntOpt(conversion: Conversion, tag: input.tree.Tag): Option[Int] =
+  def getIntOpt(conversion: Conversion, tag: tree.Tag): Option[Int] =
     getStringOpt(conversion, tag).map(_.toInt)
 
-  def getInt(conversion: Conversion, tag: input.tree.Tag): Int =
+  def getInt(conversion: Conversion, tag: tree.Tag): Int =
     getIntOpt(conversion, tag).getOrElse {
       conversion.errata.error(s"Argument '$name' was not set", tag)
       0
     }
 
-  def getBooleanOpt(conversion: Conversion, tag: input.tree.Tag): Option[Boolean] =
+  def getBooleanOpt(conversion: Conversion, tag: tree.Tag): Option[Boolean] =
     getStringOpt(conversion, tag).map(_ == "yes")
 
-  def getBoolean(conversion: Conversion, tag: input.tree.Tag): Boolean =
+  def getBoolean(conversion: Conversion, tag: tree.Tag): Boolean =
     getBooleanOpt(conversion, tag).getOrElse {
       conversion.errata.error(s"Argument '$name' was not set", tag)
       false
@@ -38,7 +39,7 @@ case class ArgumentParser(name: String, default: Boolean) {
 
 trait Instruction[T <: document.tree.Node] {
   val name: String
-  def documentNode(conversion: Conversion, tag: input.tree.Tag): T
+  def documentNode(conversion: Conversion, tag: tree.Tag): T
 
   def argument(name: String, default: Boolean): ArgumentParser =
     ArgumentParser(name, default)
@@ -50,7 +51,7 @@ case object Url extends Instruction[document.tree.Url] {
   override val name = "url"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Url =
+                            tag: tree.Tag): document.tree.Url =
     document.tree.Url(
       href.getString(conversion, tag),
       conversion.childrenOf(tag): _*)
@@ -64,7 +65,7 @@ case object Chapter extends Instruction[document.tree.Chapter] {
 
   // TODO Forbid chapter within chapter
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Chapter = {
+                            tag: tree.Tag): document.tree.Chapter = {
     val idValue = id.getStringOpt(conversion, tag)
     val titleValue = title.getString(conversion, tag)
 
@@ -86,7 +87,7 @@ case object Post extends Instruction[document.tree.Post] {
   override val name = "post"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Post = {
+                            tag: tree.Tag): document.tree.Post = {
     val idValue = id.getStringOpt(conversion, tag)
     val dateValue = date.getString(conversion, tag)
     val titleValue = title.getString(conversion, tag)
@@ -108,7 +109,7 @@ case object Section extends Instruction[document.tree.Section] {
   override val name = "section"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Section = {
+                            tag: tree.Tag): document.tree.Section = {
     val idValue = id.getStringOpt(conversion, tag)
     val titleValue = title.getString(conversion, tag)
 
@@ -126,7 +127,7 @@ case object Subsection extends Instruction[document.tree.Subsection] {
   override val name = "subsection"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Subsection = {
+                            tag: tree.Tag): document.tree.Subsection = {
     val idValue = id.getStringOpt(conversion, tag)
     val titleValue = title.getString(conversion, tag)
 
@@ -140,21 +141,21 @@ case object Subsection extends Instruction[document.tree.Subsection] {
 case object Bold extends Instruction[document.tree.Bold] {
   override val name = "bold"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Bold =
+                            tag: tree.Tag): document.tree.Bold =
     document.tree.Bold(conversion.childrenOf(tag): _*)
 }
 
 case object Italic extends Instruction[document.tree.Italic] {
   override val name = "italic"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Italic =
+                            tag: tree.Tag): document.tree.Italic =
     document.tree.Italic(conversion.childrenOf(tag): _*)
 }
 
 case object Code extends Instruction[document.tree.Code] {
   override val name = "code"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Code =
+                            tag: tree.Tag): document.tree.Code =
     document.tree.Code(conversion.childrenOf(tag): _*)
 }
 
@@ -163,28 +164,28 @@ case object Image extends Instruction[document.tree.Image] {
 
   override val name = "image"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Image =
+                            tag: tree.Tag): document.tree.Image =
     document.tree.Image(href.getString(conversion, tag))
 }
 
 case object List extends Instruction[document.tree.List] {
   override val name = "list"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.List =
+                            tag: tree.Tag): document.tree.List =
     document.tree.List(conversion.childrenOf(tag, ListItem): _*)
 }
 
 case object ListItem extends Instruction[document.tree.ListItem] {
   override val name = "listItem"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.ListItem =
+                            tag: tree.Tag): document.tree.ListItem =
     document.tree.ListItem(conversion.childrenOf(tag): _*)
 }
 
 case object Table extends Instruction[document.tree.Table] {
   override val name = "table"
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Table = {
+                            tag: tree.Tag): document.tree.Table = {
     val children = conversion.childrenOf(tag, Row)
 
     if (children.isEmpty) {
@@ -203,7 +204,7 @@ case object Row extends Instruction[document.tree.Row] {
   override val name = "row"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Row =
+                            tag: tree.Tag): document.tree.Row =
     document.tree.Row(conversion.childrenOf(tag, Column): _*)
 }
 
@@ -211,7 +212,7 @@ case object Column extends Instruction[document.tree.Column] {
   override val name = "column"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Column =
+                            tag: tree.Tag): document.tree.Column =
     document.tree.Column(conversion.childrenOf(tag): _*)
 }
 
@@ -221,7 +222,7 @@ case object Package extends Instruction[document.tree.Package] {
   override val name = "package"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Package =
+                            tag: tree.Tag): document.tree.Package =
     document.tree.Package(value.getString(conversion, tag))
 }
 
@@ -234,7 +235,7 @@ case object Scala extends Instruction[document.tree.Scala] {
   override val name = "scala"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Scala = {
+                            tag: tree.Tag): document.tree.Scala = {
     document.tree.Scala(
       `type`.getStringOpt(conversion, tag) match {
         case None => ScalaType.Code
@@ -260,7 +261,7 @@ case object Shell extends Instruction[document.tree.Shell] {
   override val name = "shell"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Shell =
+                            tag: tree.Tag): document.tree.Shell =
     document.tree.Shell(TextHelpers.reindent(tag.text))
 }
 
@@ -268,7 +269,7 @@ case object Todo extends Instruction[document.tree.Todo] {
   override val name = "todo"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Todo =
+                            tag: tree.Tag): document.tree.Todo =
     document.tree.Todo(conversion.childrenOf(tag): _*)
 }
 
@@ -278,7 +279,7 @@ case object Jump extends Instruction[document.tree.Jump] {
   override val name = "jump"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Jump = {
+                            tag: tree.Tag): document.tree.Jump = {
     val text = tag.text.trim
 
     document.tree.Jump(
@@ -292,7 +293,7 @@ case object Footnote extends Instruction[document.tree.Footnote] {
   override val name = "footnote"
 
   override def documentNode(conversion: Conversion,
-                            tag: input.tree.Tag): document.tree.Footnote =
+                            tag: tree.Tag): document.tree.Footnote =
     document.tree.Footnote(None, conversion.childrenOf(tag): _*)
 }
 

@@ -1,6 +1,7 @@
-package pl.metastack.metadocs.input
+package pl.metastack.metadocs.input.metadocs
 
-import pl.metastack.metadocs.document
+import pl.metastack.metadocs.input._
+import pl.metastack.metadocs.{Errata, document}
 
 /** Converts input tree to document tree */
 class Conversion(val instructionSet: InstructionSet,

@@ -1,8 +1,8 @@
-package pl.metastack.metadocs.input
-
-import fastparse.all._
+package pl.metastack.metadocs.input.metadocs
 
 import scala.util.Try
+
+import fastparse.all._
 
 object Parser {
   val controlChars = Set(',', '=', '[', ']', '{', '}', '"', '(')

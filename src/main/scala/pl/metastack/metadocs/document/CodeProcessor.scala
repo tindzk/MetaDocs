@@ -1,15 +1,13 @@
-package pl.metastack.metadocs.document.writer
+package pl.metastack.metadocs.document
 
 import java.io.File
 
-import pl.metastack.metadocs.SectionSupport
-import pl.metastack.metadocs.input.TextHelpers
-import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.tree.ScalaType
-
+import scala.util.Try
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
-import scala.util.Try
+
+import pl.metastack.metadocs.{TextHelpers, SectionSupport}
+import pl.metastack.metadocs.document.tree.ScalaType
 
 /**
  * @author Matt Hicks <matt@outr.com>

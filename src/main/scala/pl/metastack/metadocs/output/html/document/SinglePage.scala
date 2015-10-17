@@ -1,11 +1,12 @@
-package pl.metastack.metadocs.document.writer.html.document
+package pl.metastack.metadocs.output.html.document
 
 import java.io.File
 
 import pl.metastack.metadocs.FileUtils
 import pl.metastack.metadocs.document.tree
-import pl.metastack.metadocs.document.writer.html.{Components, Writer}
 import pl.metastack.metadocs.document.{Meta, Extractors}
+import pl.metastack.metadocs.output.HTML
+import pl.metastack.metadocs.output.html.Components
 
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
@@ -18,7 +19,7 @@ object SinglePage {
             toc: Boolean,
             tocDepth: Int = 3) {
     def referenceUrl(id: String) = s"#$id"
-    val writer = new Writer(referenceUrl)
+    val writer = new HTML(referenceUrl)
 
     val footnotes = Extractors.footnotes(root)
 
