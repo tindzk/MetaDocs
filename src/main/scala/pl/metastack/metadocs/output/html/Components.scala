@@ -100,7 +100,7 @@ object Components {
           <h3 class="date">$date</h3>
           <h1 class="title">${m.title}</h1>
           <h2 class="author">${m.author}</h2>
-          <p class="affilation"><em>${m.affiliation}</em></p>
+          <p class="affiliation"><em>${m.affiliation}</em></p>
         </header>
       """
     }.getOrElse(web.tree.Null)
