@@ -84,6 +84,8 @@ object Pegdown {
       document.tree.Scala(code = Some(TextHelpers.reindent(node.getText)))
     else if (node.getType == "bash")
       document.tree.Shell(code = TextHelpers.reindent(node.getText))
+    else if (node.getType == "")
+      document.tree.Listing(code = TextHelpers.reindent(node.getText))
     else throw new RuntimeException(s"Unknown type in verbatim node: ${node.getType}")
   }
 

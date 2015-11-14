@@ -83,6 +83,10 @@ class Markdown(referenceUrl: String => String) {
     s"```bash\n${shell.code}\n```\n"
   }
 
+  val listing = StringWriter[tree.Listing] { listing =>
+    s"```\n${listing.code}\n```\n"
+  }
+
   val todo = StringWriter[tree.Todo] { todo =>
     s"**Todo:** ${children(todo).mkString}"
   }
@@ -117,9 +121,9 @@ class Markdown(referenceUrl: String => String) {
     StringWriter.combine[tree.Node](
       table.asInstanceOf[StringWriter[tree.Node]],
       Seq(
-        list, listItem, code, url, image, bold, italic, todo, shell, `package`,
-        scala, chapter, section, subsection, paragraph, quote, text, jump,
-        footnote
+        list, listItem, code, url, image, bold, italic, todo, shell, scala,
+        listing, `package`, chapter, section, subsection, paragraph, quote,
+        text, jump, footnote
       ).map(_.asInstanceOf[StringWriter[tree.Node]]): _*)
 
   val root = StringWriter[tree.Root] { root =>

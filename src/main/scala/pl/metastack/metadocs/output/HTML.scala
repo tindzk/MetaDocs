@@ -93,6 +93,10 @@ class HTML(referenceUrl: String => String) {
     htmlT"""<pre class="sourceCode shell"><code>${shell.code}</code></pre>"""
   }
 
+  val listing = WebWriter[tree.Listing] { listing =>
+    htmlT"""<pre class="sourceCode"><code>${listing.code}</code></pre>"""
+  }
+
   val todo = WebWriter[tree.Todo] { todo =>
     htmlT"<div><b>Todo:</b> ${children(todo)}</div>"
   }
@@ -129,9 +133,9 @@ class HTML(referenceUrl: String => String) {
     WebWriter.combine[tree.Node](
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
-        list, listItem, code, url, image, bold, italic, todo, shell, `package`,
-        scala, chapter, section, subsection, paragraph, quote, text, jump,
-        footnote
+        list, listItem, code, url, image, bold, italic, todo, shell, listing,
+        scala, `package`, chapter, section, subsection, paragraph, quote, text,
+        jump, footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>

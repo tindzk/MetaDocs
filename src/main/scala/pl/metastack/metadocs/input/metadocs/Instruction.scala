@@ -265,6 +265,14 @@ case object Shell extends Instruction[document.tree.Shell] {
     document.tree.Shell(TextHelpers.reindent(tag.text))
 }
 
+case object Listing extends Instruction[document.tree.Listing] {
+  override val name = "listing"
+
+  override def documentNode(conversion: Conversion,
+                            tag: tree.Tag): document.tree.Listing =
+    document.tree.Listing(TextHelpers.reindent(tag.text))
+}
+
 case object Quote extends Instruction[document.tree.Quote] {
   override val name = "quote"
 
@@ -343,7 +351,8 @@ object BlogInstructionSet extends InstructionSet {
 }
 
 object CodeInstructionSet extends InstructionSet {
-  override val instructions: Set[Instruction[_]] = Set(Package, Scala, Shell)
+  override val instructions: Set[Instruction[_]] = Set(Package, Scala, Shell,
+    Listing)
 }
 
 object DraftInstructionSet extends InstructionSet {
