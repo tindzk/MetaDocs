@@ -184,4 +184,21 @@ column[Ref[Supplier], Int]()
       Root(Paragraph(Text("\"test\"")))
     )
   }
+
+  test("Block quote") {
+    assertEquals(Pegdown.parse(
+      """> A
+> B
+> C"""),
+
+      Root(
+        Quote(
+          Paragraph(
+            Text("A"),
+            Text("\n"),
+            Text("B"),
+            Text("\n"),
+            Text("C"))))
+    )
+  }
 }

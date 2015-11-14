@@ -100,6 +100,10 @@ class Markdown(referenceUrl: String => String) {
     children(paragraph).mkString + "\n\n"
   }
 
+  val quote = StringWriter[tree.Quote] { quote =>
+    children(quote).mkString.lines.map("> " + _).mkString
+  }
+
   val text = StringWriter[tree.Text] { text =>
     text.text
   }
@@ -114,7 +118,8 @@ class Markdown(referenceUrl: String => String) {
       table.asInstanceOf[StringWriter[tree.Node]],
       Seq(
         list, listItem, code, url, image, bold, italic, todo, shell, `package`,
-        scala, chapter, section, subsection, paragraph, text, jump, footnote
+        scala, chapter, section, subsection, paragraph, quote, text, jump,
+        footnote
       ).map(_.asInstanceOf[StringWriter[tree.Node]]): _*)
 
   val root = StringWriter[tree.Root] { root =>

@@ -109,6 +109,10 @@ class HTML(referenceUrl: String => String) {
     htmlT"<p>${children(paragraph)}</p>"
   }
 
+  val quote = WebWriter[tree.Quote] { quote =>
+    htmlT"<blockquote>${children(quote)}</blockquote>"
+  }
+
   val text = WebWriter[tree.Text] { text =>
     web.tree.Text(text.text)
   }
@@ -126,7 +130,8 @@ class HTML(referenceUrl: String => String) {
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
         list, listItem, code, url, image, bold, italic, todo, shell, `package`,
-        scala, chapter, section, subsection, paragraph, text, jump, footnote
+        scala, chapter, section, subsection, paragraph, quote, text, jump,
+        footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>

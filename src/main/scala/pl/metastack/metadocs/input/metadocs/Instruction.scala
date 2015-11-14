@@ -265,6 +265,15 @@ case object Shell extends Instruction[document.tree.Shell] {
     document.tree.Shell(TextHelpers.reindent(tag.text))
 }
 
+case object Quote extends Instruction[document.tree.Quote] {
+  override val name = "quote"
+
+  override def documentNode(conversion: Conversion,
+                            tag: tree.Tag): document.tree.Quote =
+    document.tree.Quote(
+      TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
+}
+
 case object Todo extends Instruction[document.tree.Todo] {
   override val name = "todo"
 
@@ -322,7 +331,7 @@ trait InstructionSet {
 object DefaultInstructionSet extends InstructionSet {
   override val instructions: Set[Instruction[_]] = Set(
     Jump, Footnote, Bold, Italic, Url, List, ListItem, Code, Image, Table, Row,
-    Column)
+    Column, Quote)
 }
 
 object BookInstructionSet extends InstructionSet {

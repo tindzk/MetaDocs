@@ -123,12 +123,12 @@ object Pegdown {
   def childrenText(node: Node): String =
     node.getChildren.collect {
       case t: TextNode => t.getText
-    }.mkString("")
+    }.mkString
 
   def superChildrenText(node: Node): String =
     superChildren(node).collect {
       case t: TextNode => t.getText
-    }.mkString("")
+    }.mkString
 
   def visit(node: HeaderNode, conversion: Conversion): document.tree.Node =
     node.getLevel match {
@@ -173,10 +173,10 @@ object Pegdown {
   def visit(node: OrderedListNode, conversion: Conversion): document.tree.Node =
     document.tree.List(
       superChildren(node)
-        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*
-    )
+        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*)
 
-  def visit(node: BlockQuoteNode, conversion: Conversion): document.tree.Node = ???
+  def visit(node: BlockQuoteNode, conversion: Conversion): document.tree.Node =
+    document.tree.Quote(node.getChildren.map(dispatch(_, conversion)): _*)
 
   def visit(node: AutoLinkNode, conversion: Conversion): document.tree.Node =
     document.tree.Url(node.getText, node.getChildren.map(dispatch(_, conversion)): _*)
