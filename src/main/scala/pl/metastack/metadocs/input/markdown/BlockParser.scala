@@ -42,14 +42,18 @@ object BlockParser {
     val collected = mutable.ArrayBuffer.empty[tree.Tag]
     var inCodeBlock = false
 
-    // Ignore code blocks
-    def split(s: String) = s.replaceAll("```", "_$0_").split("_")
+    // Ignore code blocks and verbatim expressions
+    def split(s: String) =
+      s.replaceAll("```", "_$0_")
+       .replaceAll("``", "_$0_")
+       .replaceAll("`", "_$0_")
+       .split("_")
 
     split(input).foreach { input =>
-      if (input == "```") {
-        inCodeBlock = !inCodeBlock
+      if (inCodeBlock) {
         replaced += input
-      } else if (inCodeBlock) {
+      } else if (Set("```", "``", "`").contains(input)) {
+        inCodeBlock = !inCodeBlock
         replaced += input
       } else {
         var i = 0

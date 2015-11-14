@@ -50,6 +50,16 @@ column[Ref[Supplier], Int]()
     assertEquals(BlockParser.replace(input)._1, input)
   }
 
+  test("Don't replace in verbatim") {
+    val input = "``column[Ref[Supplier], Int]()``"
+    assertEquals(BlockParser.replace(input)._1, input)
+  }
+
+  test("Don't replace in verbatim (2)") {
+    val input = "`column[Ref[Supplier], Int]()`"
+    assertEquals(BlockParser.replace(input)._1, input)
+  }
+
   test("Bold") {
     assertEquals(Pegdown.parse("**Hello**"),
       Root(Paragraph(Bold(Text("Hello")))))
