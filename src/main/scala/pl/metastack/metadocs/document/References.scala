@@ -10,7 +10,7 @@ case class Reference(caption: String,
 }
 
 case class References(children: Seq[Reference]) {
-  override def toString = children.map(_.format(0)).mkString.init
+  override def toString = children.map(_.format(0)).mkString
 
   def resolve(id: String): Reference = {
     def f(node: Reference): Option[Reference] =
