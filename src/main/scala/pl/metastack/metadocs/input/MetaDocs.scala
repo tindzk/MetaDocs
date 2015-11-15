@@ -23,10 +23,10 @@ object MetaDocs {
                instructionSet: metadocs.InstructionSet,
                constants: Map[String, String] = Map.empty,
                generateId: String => Option[String] = _ => None
-              ): Try[document.tree.Root] = {
+              ): Either[SyntaxError, document.tree.Root] = {
     val contents = io.Source.fromFile(file).mkString
     val replaced = Helpers.replaceConstants(contents, constants)
     val root = input.metadocs.Parser.parse(replaced)
-    root.map(toDocumentTree(_, instructionSet, generateId))
+    root.right.map(toDocumentTree(_, instructionSet, generateId))
   }
 }

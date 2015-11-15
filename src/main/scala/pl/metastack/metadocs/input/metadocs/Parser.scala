@@ -1,6 +1,6 @@
 package pl.metastack.metadocs.input.metadocs
 
-import scala.util.Try
+import pl.metastack.metadocs.input.{StackFrame, SyntaxError}
 
 import fastparse.all._
 
@@ -49,5 +49,9 @@ object Parser {
 
   val root = P(nodes ~ End).map(tree.Root)
 
-  def parse(input: String): Try[tree.Root] = Try(root.parse(input).get.value)
+  def parse(input: String): Either[SyntaxError, tree.Root] =
+    root.parse(input) match {
+      case f: Result.Failure => Left(SyntaxError.fromFarseParse(f))
+      case s: Result.Success[tree.Root] => Right(s.get.value)
+    }
 }

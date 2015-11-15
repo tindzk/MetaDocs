@@ -94,4 +94,10 @@ object ParserSpec extends SimpleTestSuite {
     checkRule(root, "tag{}tag2{}", tree.Root(Seq(tree.Tag("tag"), tree.Tag("tag2"))))
     checkRule(root, "", tree.Root(Seq.empty))
   }
+
+  test("Error handling") {
+    val error = Parser.parse("\ntag[{}").left.get
+    assertEquals(error.line, 2)
+    assertEquals(error.column, 6)
+  }
 }
