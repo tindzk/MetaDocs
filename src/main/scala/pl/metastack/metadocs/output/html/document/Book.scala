@@ -41,7 +41,7 @@ object Book {
       else Some(chapters(index + 1))
 
     val body = web.tree.Container(Seq(
-      Components.navigationHeader(meta, previous, next),
+      Components.navigationHeader(meta, previous, next, chapter.sourcePath),
       writer.chapter.write(chapter),
       Components.footnotes(writer, footnotes)
     ))

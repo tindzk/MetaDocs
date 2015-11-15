@@ -134,7 +134,7 @@ object Pegdown {
 
   def visit(node: HeaderNode, conversion: Conversion): document.tree.Node =
     node.getLevel match {
-      case 1 => document.tree.Chapter(
+      case 1 => document.tree.Chapter(None,
         conversion.generateId(childrenText(node)), childrenText(node))
       case 2 => document.tree.Section(
         conversion.generateId(childrenText(node)), childrenText(node))
@@ -224,7 +224,7 @@ object Pegdown {
   }
 
   def visit(node: RootNode, conversion: Conversion): document.tree.Root =
-    document.tree.Root(node.getChildren.map(dispatch(_, conversion)): _*)
+    document.tree.Root(None, node.getChildren.map(dispatch(_, conversion)): _*)
 
   def dispatch(node: Node, conversion: Conversion): document.tree.Node =
     node match {

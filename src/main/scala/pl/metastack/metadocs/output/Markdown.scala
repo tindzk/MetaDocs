@@ -150,7 +150,7 @@ object Markdown {
     def iterate(node: tree.Node, depth: Int): Option[String] =
       node match {
         case _ if depth >= maxDepth => None
-        case tag @ tree.Chapter(id, caption, children @ _*) =>
+        case tag @ tree.Chapter(_, id, caption, children @ _*) =>
           Some(render(caption, id, children.flatMap(iterate(_, depth + 1)), depth))
         case tag @ tree.Section(id, caption, children @ _*) =>
           Some(render(caption, id, children.flatMap(iterate(_, depth + 1)), depth))
@@ -188,8 +188,10 @@ object Markdown {
     }.getOrElse("")
   }
 
-  def navigationHeader(previous: Option[tree.Chapter],
-                       next: Option[tree.Chapter]): String = {
+  def navigationHeader(meta: Option[Meta],
+                       previous: Option[tree.Chapter],
+                       next: Option[tree.Chapter],
+                       sourcePath: Option[String]): String = {
     val previousMd = previous.map { ch =>
       val href = s"${ch.id.get}.md"
       s"""Previous chapter: [${ch.title}]($href)"""
@@ -200,11 +202,23 @@ object Markdown {
       s"""Next chapter: [${ch.title}]($href)"""
     }.getOrElse("")
 
-    val separator =
-      if (nextMd.nonEmpty) " | "
-      else ""
+    val editMd = meta.flatMap(_.editSourceURL).flatMap { edit =>
+      sourcePath.map { sp =>
+        val href = edit + sp
+        s"[Edit source]($href)"
+      }
+    }.getOrElse("")
 
-    previousMd + " " + separator + " " + nextMd + "\n\n"
+    val items = Seq(previousMd, nextMd, editMd)
+      .filter(_.nonEmpty)
+      .foldLeft(Seq.empty[String]) { case (acc, cur) =>
+        acc match {
+          case Nil => Seq(cur)
+          case a => a ++ Seq(" | ", cur)
+        }
+      }
+
+    items + "\n\n"
   }
 
   def `abstract`(meta: Option[Meta]): String =
@@ -236,7 +250,7 @@ object Markdown {
       if (chapters.last == chapter) None
       else Some(chapters(index + 1))
 
-    navigationHeader(previous, next) +
+    navigationHeader(meta, previous, next, meta.flatMap(_.editSourceURL)) +
     writer.chapter.write(chapter) +
     this.footnotes(writer, footnotes)
   }

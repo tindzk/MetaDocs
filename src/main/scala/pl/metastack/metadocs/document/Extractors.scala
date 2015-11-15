@@ -20,9 +20,9 @@ object Extractors {
   def references(root: tree.Root): References = {
     def iterate(node: tree.Node): Option[Reference] =
       node match {
-        case tag @ tree.Post(id, _, caption, _, children @ _*) =>
+        case tag @ tree.Post(_,id, _, caption, _, children @ _*) =>
           Some(Reference(caption, id, children.flatMap(iterate)))
-        case tag @ tree.Chapter(id, caption, children @ _*) =>
+        case tag @ tree.Chapter(_, id, caption, children @ _*) =>
           Some(Reference(caption, id, children.flatMap(iterate)))
         case tag @ tree.Section(id, caption, children @ _*) =>
           Some(Reference(caption, id, children.flatMap(iterate)))

@@ -46,7 +46,7 @@ object Components {
     def iterate(node: tree.Node, depth: Int): Option[web.tree.Node] =
       node match {
         case _ if depth >= maxDepth => None
-        case tag @ tree.Chapter(id, caption, children @ _*) =>
+        case tag @ tree.Chapter(_, id, caption, children @ _*) =>
           Some(render(caption, id, children.flatMap(iterate(_, depth + 1))))
         case tag @ tree.Section(id, caption, children @ _*) =>
           Some(render(caption, id, children.flatMap(iterate(_, depth + 1))))
@@ -113,7 +113,8 @@ object Components {
 
   def navigationHeader(meta: Option[Meta],
                        previous: Option[tree.Chapter],
-                       next: Option[tree.Chapter]): web.tree.Node = {
+                       next: Option[tree.Chapter],
+                       sourcePath: Option[String]): web.tree.Node = {
     val previousHtml = previous.map { ch =>
       val href = s"${ch.id.get}.html"
       htmlT"""<span>Previous chapter: <a href=$href>${ch.title}</a></span>"""
@@ -126,9 +127,21 @@ object Components {
       htmlT"""<span>Next chapter: <a href=$href>${ch.title}</a></span>"""
     }.getOrElse(web.tree.Null)
 
-    val separator =
-      if (nextHtml != web.tree.Null) " | "
-      else ""
+    val editHtml: web.tree.Node = meta.flatMap(_.editSourceURL).flatMap { edit =>
+      sourcePath.map { sp =>
+        val href = edit + sp
+        htmlT"""<span><a href=$href>Edit source</a></span>"""
+      }
+    }.getOrElse(web.tree.Null)
+
+    val items = Seq(previousHtml, nextHtml, editHtml)
+      .filter(_ != web.tree.Null)
+      .foldLeft(Seq.empty[web.tree.Node]) { case (acc, cur) =>
+        acc match {
+          case Nil => Seq(cur)
+          case a => a ++ Seq(web.tree.Text(" | "), cur)
+        }
+      }
 
     val title =
       meta.map { m =>
@@ -139,9 +152,11 @@ object Components {
           """
       }.getOrElse(web.tree.Null)
 
-    web.tree.Container(Seq(
-      title,
-      htmlT"<nav>$previousHtml $separator $nextHtml</nav>"))
+    web.tree.Container(
+      Seq(
+        title,
+        // TODO Allow htmlT"<nav>${web.tree.Container(items)}</nav>"
+        web.tree.Tag("nav", events = Map.empty, children = items)))
   }
 
   type Skeleton = (Option[Meta], Option[String], web.tree.Node) => web.tree.Node

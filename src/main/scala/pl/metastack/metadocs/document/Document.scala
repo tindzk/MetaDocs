@@ -9,9 +9,18 @@ import pl.metastack.{metaweb => web}
 import pl.metastack.metadocs._
 
 object Document {
-  /** Merge trees of loaded files */
-  def mergeTrees(trees: Seq[tree.Root]): tree.Root =
-    tree.Root(trees.flatMap(_.children): _*)
+  /** Merge all trees and add source path reference to each top-level node */
+  def mergeTrees(trees: Seq[tree.Root]): tree.Root = {
+    val children = trees.flatMap { t =>
+      t.map {
+        case tag: tree.Post => tag.copy(sourcePath = t.sourcePath)
+        case tag: tree.Chapter => tag.copy(sourcePath = t.sourcePath)
+        case tag => tag
+      }.children
+    }
+
+    tree.Root(None, children: _*)
+  }
 
   def uniqueIds(root: tree.Root): tree.Root = {
     val collectedIds = mutable.HashMap.empty[String, Int]
@@ -42,10 +51,10 @@ object Document {
     val idToCaption = mutable.HashMap.empty[String, String]
 
     root.map {
-      case tag @ tree.Post(Some(id), _, caption, _, children @ _*) =>
+      case tag @ tree.Post(_, Some(id), _, caption, _, children @ _*) =>
         idToCaption += (id -> caption)
         tag
-      case tag @ tree.Chapter(Some(id), caption, children @ _*) =>
+      case tag @ tree.Chapter(_, Some(id), caption, children @ _*) =>
         idToCaption += (id -> caption)
         tag
       case tag @ tree.Section(Some(id), caption, children @ _*) =>

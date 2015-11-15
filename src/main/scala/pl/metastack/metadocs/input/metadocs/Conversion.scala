@@ -1,6 +1,5 @@
 package pl.metastack.metadocs.input.metadocs
 
-import pl.metastack.metadocs.input._
 import pl.metastack.metadocs.{Errata, document}
 
 /** Converts input tree to document tree */
@@ -8,7 +7,7 @@ class Conversion(val instructionSet: InstructionSet,
                  val generateId: String => Option[String],
                  val errata: Errata = new Errata) {
   def convertRoot(root: tree.Root): document.tree.Root =
-    document.tree.Root(root.children.map(convert): _*)
+    document.tree.Root(None, root.children.map(convert): _*)
 
   def convertText(text: tree.Text): document.tree.Text =
     document.tree.Text(text.value)

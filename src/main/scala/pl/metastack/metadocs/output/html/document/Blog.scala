@@ -19,7 +19,7 @@ object Blog {
   def postList(root: tree.Root, meta: Meta, referenceUrl: String => String): web.tree.Node = {
     def iterate(node: tree.Node): Option[web.tree.Node] =
       node match {
-        case tag @ tree.Post(id, date, title, description, children @ _*) =>
+        case tag @ tree.Post(_, id, date, title, description, children @ _*) =>
           val url = id.map(referenceUrl)
           val descriptionT: web.tree.Node =
             description.map(d => htmlT"<h2>$d</h2>")

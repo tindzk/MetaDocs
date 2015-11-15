@@ -1,6 +1,6 @@
 package pl.metastack.metadocs.input.metadocs
 
-import pl.metastack.metadocs.input.{StackFrame, SyntaxError}
+import pl.metastack.metadocs.input.SyntaxError
 
 import fastparse.all._
 

@@ -69,7 +69,7 @@ case object Chapter extends Instruction[document.tree.Chapter] {
     val idValue = id.getStringOpt(conversion, tag)
     val titleValue = title.getString(conversion, tag)
 
-    document.tree.Chapter(
+    document.tree.Chapter(None,
       idValue.orElse(conversion.generateId(titleValue)),
       titleValue,
       TextHelpers.detectParagraphs(conversion.childrenOf(tag)): _*)
@@ -93,7 +93,7 @@ case object Post extends Instruction[document.tree.Post] {
     val titleValue = title.getString(conversion, tag)
     val descriptionOpt = description.getStringOpt(conversion, tag)
 
-    document.tree.Post(
+    document.tree.Post(None,
       idValue.orElse(conversion.generateId(titleValue)),
       DateFormatter.parseDateTime(dateValue),
       titleValue,

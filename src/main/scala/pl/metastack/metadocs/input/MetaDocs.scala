@@ -19,14 +19,15 @@ object MetaDocs {
     conversion.convertRoot(root)
   }
 
-  def loadFile(file: File,
+  def loadFile(path: String,
                instructionSet: metadocs.InstructionSet,
                constants: Map[String, String] = Map.empty,
                generateId: String => Option[String] = _ => None
               ): Either[SyntaxError, document.tree.Root] = {
-    val contents = io.Source.fromFile(file).mkString
+    val contents = io.Source.fromFile(new File(path)).mkString
     val replaced = Helpers.replaceConstants(contents, constants)
     val root = input.metadocs.Parser.parse(replaced)
-    root.right.map(toDocumentTree(_, instructionSet, generateId))
+    root.right.map(toDocumentTree(_, instructionSet, generateId)
+      .copy(sourcePath = Some(path)))
   }
 }

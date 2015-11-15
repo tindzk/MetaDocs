@@ -18,7 +18,10 @@ case class Meta(
   url: String,
 
   /* URL to avatar */
-  avatar: Option[String] = None
+  avatar: Option[String] = None,
+
+  /* E.g. https://github.com/$user/$project/edit/master/ */
+  editSourceURL: Option[String] = None
 ) {
   val locale = Locale.forLanguageTag(language)
 }
