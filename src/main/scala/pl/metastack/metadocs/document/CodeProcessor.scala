@@ -14,9 +14,11 @@ import pl.metastack.metadocs.document.tree.ScalaType
  * @author Tim Nieradzik <tim@metastack.pl>
  */
 object CodeProcessor {
-  def scalaFile(`package`: Option[String], fileName: String): File = {
+  def scalaFile(basePath: String,
+                `package`: Option[String],
+                fileName: String): File = {
     val packagePath = `package`.getOrElse("").replaceAll("[.]", "/")
-    new File(s"src/main/scala/$packagePath/$fileName.scala")
+    new File(s"$basePath/src/main/scala/$packagePath/$fileName.scala")
   }
 
   private def forLines(file: File)(f: String => Unit): Unit = {
@@ -181,7 +183,7 @@ object CodeProcessor {
     )
   }
 
-  def embedListings(root: tree.Root): tree.Root = {
+  def embedListings(basePath: String)(root: tree.Root): tree.Root = {
     var `package` = Option.empty[String]
 
     def iterate(node: tree.Node): tree.Node =
@@ -193,7 +195,7 @@ object CodeProcessor {
         case scala: tree.Scala =>
           lazy val fileName = scala.file.getOrElse(
             throw new RuntimeException(s"Scala listing $scala doesn't set a filename"))
-          lazy val file = scalaFile(`package`, fileName)
+          lazy val file = scalaFile(basePath, `package`, fileName)
           val code = scala.`type` match {
             case ScalaType.Code => scala.code.get
             case ScalaType.Imports => imports(file).mkString("\n")
