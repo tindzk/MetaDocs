@@ -219,7 +219,7 @@ object CodeProcessor {
     val className = `package`.map(_ + ".").getOrElse("") + fileName
     val classLoader = getClass.getClassLoader
     val companionClass = Try(Class.forName(className + "$", true, classLoader))
-      .getOrElse(throw new RuntimeException(s"No companion object for $className"))
+      .getOrElse(throw new RuntimeException(s"Cannot find object $className"))
     val companion = companionClass.getField("MODULE$")
       .get(null)
       .asInstanceOf[SectionSupport]
