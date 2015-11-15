@@ -21,10 +21,12 @@ object MetaDocs {
 
   def loadFile(file: File,
                instructionSet: metadocs.InstructionSet,
+               constants: Map[String, String] = Map.empty,
                generateId: String => Option[String] = _ => None
               ): Try[document.tree.Root] = {
     val contents = io.Source.fromFile(file).mkString
-    val root = input.metadocs.Parser.parse(contents)
+    val replaced = Helpers.replaceConstants(contents, constants)
+    val root = input.metadocs.Parser.parse(replaced)
     root.map(toDocumentTree(_, instructionSet, generateId))
   }
 }
