@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import pl.metastack.metaweb._
 import pl.metastack.{metaweb => web}
 
+import pl.metastack.metadocs.BuildInfo
 import pl.metastack.metadocs.output.HTML
 import pl.metastack.metadocs.document.{tree, Meta}
 
@@ -20,7 +21,8 @@ object Components {
   }
 
   def generatedWith(smallClass: Boolean = false): web.tree.Node = {
-    val link = htmlT"""<a href="http://github.com/MetaStack-pl/MetaDocs">MetaDocs</a>"""
+    val caption = "MetaDocs v" + BuildInfo.version
+    val link = htmlT"""<a href="http://github.com/MetaStack-pl/MetaDocs">$caption</a>"""
     if (smallClass) htmlT"""<p class="small">Generated with $link</p>"""
     else htmlT"""<p><small>Generated with $link</small></p>"""
   }
@@ -195,6 +197,8 @@ object Components {
       htmlT"<script>$js</script>"
     }.getOrElse(web.tree.Null)
 
+    val generator = "MetaDocs v" + BuildInfo.version
+
     htmlT"""
       <!DOCTYPE html>
       <html lang="$language">
@@ -203,7 +207,7 @@ object Components {
           <meta charset="utf-8" />
           <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta name="generator" content="MetaDocs" />
+          <meta name="generator" content=$generator />
           $faviconT
           $rssT
           $cssT

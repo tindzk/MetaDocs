@@ -36,3 +36,9 @@ libraryDependencies ++= Seq(
 )
 
 testFrameworks += new TestFramework("minitest.runner.Framework")
+
+enablePlugins(BuildInfoPlugin)
+
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+buildInfoPackage := "pl.metastack.metadocs"
