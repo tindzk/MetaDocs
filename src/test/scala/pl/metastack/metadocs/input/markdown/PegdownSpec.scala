@@ -108,6 +108,23 @@ column[Ref[Supplier], Int]()
       Root(Paragraph(Url("https://en.wikipedia.org/wiki/Autocommit", Text("autocommit")))))
   }
 
+  test("Image (1)") {
+    assertEquals(
+      Pegdown.parse("![Traits](images/traits.png)"),
+      Root(Paragraph(
+        Image("images/traits.png")
+      )))
+  }
+
+  test("Image (2)") {
+    assertEquals(
+      Pegdown.parseWithExtensions("![Traits](images/traits.png)",
+        DefaultInstructionSet),
+      Root(Paragraph(
+        Image("images/traits.png")
+      )))
+  }
+
   test("Footnote") {
     assertEquals(
       Pegdown.parseWithExtensions("a[footnote]{Foot`note`}b",

@@ -52,7 +52,9 @@ object BlockParser {
     CharsWhile(!Set('`', '[').contains(_)).!
   ).map(t => Text(t))
 
-  val parser = P((verbatim | tag | text).rep)
+  val other = P(("`" | "[").!).map(Text)
+
+  val parser = P((verbatim | tag | text | other).rep)
 
   def parse(input: String): Try[tree.Tag] = Try(tag.parse(input).get.value.tag)
 
