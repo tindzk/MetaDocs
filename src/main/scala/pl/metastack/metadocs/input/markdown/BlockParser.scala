@@ -17,7 +17,7 @@ object BlockParser {
   ).!)
   val whitespaces = P(CharsWhile(_.isWhitespace).?)
   val stringChars = P(CharsWhile(!Set('\\', '\"').contains(_)))
-  val quotedString = P("\"" ~! (stringChars | "\\\"").rep.! ~ "\"")
+  val quotedString = P("\"" ~/ (stringChars | "\\\"").rep.! ~ "\"")
     .map(_.replaceAllLiterally("\\\"", "\""))
   val argument = P(identifier ~ "=" ~ quotedString).map(tree.Argument.Named.tupled)
 
@@ -38,7 +38,7 @@ object BlockParser {
     "[" ~
       identifier ~
       whitespaces ~
-      argument.rep(sep=CharsWhile(_.isWhitespace) ~!).? ~
+      argument.rep(sep=CharsWhile(_.isWhitespace) ~/).? ~
       whitespaces ~
     "]" ~
       !"(" ~ // Don't match Markdown links

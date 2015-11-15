@@ -14,7 +14,7 @@ object Parser {
   val whitespaces = P(CharsWhile(_.isWhitespace).?)
 
   val stringChars = P(CharsWhile(!Set('\\', '\"').contains(_)))
-  val quotedString = P("\"" ~! (stringChars | "\\\"").rep.! ~ "\"")
+  val quotedString = P("\"" ~/ (stringChars | "\\\"").rep.! ~ "\"")
     .map(_.replaceAllLiterally("\\\"", "\""))
   val argumentValue = P(quotedString | CharsWhile(!controlChars.contains(_)).!)
   val namedArgument = P(identifier ~ "=" ~ argumentValue).map(tree.Argument.Named.tupled)
@@ -35,7 +35,7 @@ object Parser {
   val tag = P(
     whitespaces ~
     identifier ~
-    ("[" ~ argument.rep(sep="," ~!) ~ "]").? ~
+    ("[" ~ argument.rep(sep="," ~/) ~ "]").? ~
     whitespaces ~ (
       "{*" ~ rawText.rep ~ "*}" |
       "{" ~ nodes ~ "}"
