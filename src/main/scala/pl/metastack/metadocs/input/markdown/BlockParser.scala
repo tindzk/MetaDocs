@@ -1,6 +1,5 @@
 package pl.metastack.metadocs.input.markdown
 
-import scala.collection.mutable
 import scala.util.Try
 
 import fastparse.all._
@@ -22,6 +21,19 @@ object BlockParser {
     .map(_.replaceAllLiterally("\\\"", "\""))
   val argument = P(identifier ~ "=" ~ quotedString).map(tree.Argument.Named.tupled)
 
+  trait Node
+  case class Verbatim(value: String) extends Node
+  case class Text(value: String) extends Node
+  case class Tag(tag: tree.Tag) extends Node
+
+  val verbatim = P(
+    (
+      "`".rep(1) ~
+      (!"`" ~ AnyChar).rep(1) ~
+      "`".rep(1)
+    ).!
+  ).map(Verbatim)
+
   val tag = P(
     "[" ~
       identifier ~
@@ -32,46 +44,27 @@ object BlockParser {
       !"(" ~ // Don't match Markdown links
       ("{" ~ Parser.nodes ~ "}").?
   ).map { case (ident, args, children) =>
-    tree.Tag(ident, args.getOrElse(Seq.empty), children.getOrElse(Seq.empty))
+    Tag(tree.Tag(ident, args.getOrElse(Seq.empty),
+      children.getOrElse(Seq.empty)))
   }
 
-  def parse(input: String): Try[tree.Tag] = Try(tag.parse(input).get.value)
+  val text = P(
+    CharsWhile(!Set('`', '[').contains(_)).!
+  ).map(t => Text(t))
 
+  val parser = P((verbatim | tag | text).rep)
+
+  def parse(input: String): Try[tree.Tag] = Try(tag.parse(input).get.value.tag)
+
+  /** Ignores code blocks and verbatim expressions */
   def replace(input: String): (String, Seq[tree.Tag]) = {
-    var replaced = ""
-    val collected = mutable.ArrayBuffer.empty[tree.Tag]
-    var inCodeBlock = false
-
-    // Ignore code blocks and verbatim expressions
-    def split(s: String) =
-      s.replaceAll("`+", "_$0_")
-       .split("_")
-
-    split(input).foreach { input =>
-      if (Set("```", "``", "`").contains(input)) {
-        inCodeBlock = !inCodeBlock
-        replaced += input
-      } else if (inCodeBlock) {
-        replaced += input
-      } else {
-        var i = 0
-        while (i < input.length) {
-          if (input(i) != '[') replaced += input(i)
-          else {
-            val parsed = tag.parse(input.substring(i))
-            if (parsed.isInstanceOf[Result.Failure]) replaced += input(i)
-            else {
-              collected += parsed.get.value
-              replaced += "%" + collected.length
-              i += parsed.get.index - 1
-            }
-          }
-
-          i += 1
-        }
+    val parsed = parser.parse(input).get.value
+    parsed.foldLeft(("", Seq.empty[tree.Tag])) { case ((accSt, accTags), cur) =>
+      cur match {
+        case Verbatim(v) => (accSt + v, accTags)
+        case Text(t) => (accSt + t, accTags)
+        case Tag(t) => (accSt + "%" + (accTags.length + 1), accTags ++ Seq(t))
       }
     }
-
-    (replaced, collected)
   }
 }

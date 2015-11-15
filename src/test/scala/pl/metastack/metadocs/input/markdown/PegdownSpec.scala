@@ -5,7 +5,7 @@ import scala.util.Success
 import minitest.SimpleTestSuite
 
 import pl.metastack.metadocs.document.tree._
-import pl.metastack.metadocs.input.metadocs.tree
+import pl.metastack.metadocs.input.metadocs.{DefaultInstructionSet, tree}
 
 object PegdownSpec extends SimpleTestSuite {
   test("Parse block extension") {
@@ -68,6 +68,12 @@ column[Ref[Supplier], Int]()
     assertEquals(BlockParser.replace(input)._1, input)
   }
 
+  test("Keep special characters in blocks") {
+    val input = "[footnote]{`text`}"
+    assertEquals(BlockParser.replace(input), ("%1",
+      Seq(tree.Tag("footnote", children = Seq(tree.Text("`text`"))))))
+  }
+
   test("Bold") {
     assertEquals(Pegdown.parse("**Hello**"),
       Root(Paragraph(Bold(Text("Hello")))))
@@ -78,6 +84,8 @@ column[Ref[Supplier], Int]()
       Root(Paragraph(Code(Text("code")))))
     assertEquals(Pegdown.parse("``code``"),
       Root(Paragraph(Code(Text("code")))))
+    assertEquals(Pegdown.parse("``Ref[_]``"),
+      Root(Paragraph(Code(Text("Ref[_]")))))
   }
 
   test("Link") {
@@ -98,6 +106,17 @@ column[Ref[Supplier], Int]()
   test("Auto link") {
     assertEquals(Pegdown.parse("[autocommit](https://en.wikipedia.org/wiki/Autocommit)"),
       Root(Paragraph(Url("https://en.wikipedia.org/wiki/Autocommit", Text("autocommit")))))
+  }
+
+  test("Footnote") {
+    assertEquals(
+      Pegdown.parseWithExtensions("a[footnote]{Foot`note`}b",
+       DefaultInstructionSet),
+      Root(Paragraph(
+        Text("a"),
+        Footnote(None, Text("Foot`note`")),
+        Text("b")
+      )))
   }
 
   test("Source code") {
