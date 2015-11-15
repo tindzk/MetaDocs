@@ -44,16 +44,14 @@ object BlockParser {
 
     // Ignore code blocks and verbatim expressions
     def split(s: String) =
-      s.replaceAll("```", "_$0_")
-       .replaceAll("``", "_$0_")
-       .replaceAll("`", "_$0_")
+      s.replaceAll("`+", "_$0_")
        .split("_")
 
     split(input).foreach { input =>
-      if (inCodeBlock) {
-        replaced += input
-      } else if (Set("```", "``", "`").contains(input)) {
+      if (Set("```", "``", "`").contains(input)) {
         inCodeBlock = !inCodeBlock
+        replaced += input
+      } else if (inCodeBlock) {
         replaced += input
       } else {
         var i = 0

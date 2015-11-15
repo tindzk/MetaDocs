@@ -43,6 +43,14 @@ object PegdownSpec extends SimpleTestSuite {
           Seq(tree.Argument.Named("key", "value"))))))
   }
 
+  test("Replace blocks (2)") {
+    assertEquals(
+      BlockParser.replace("""`a` [tag key="value"] `b`"""),
+      ("`a` %1 `b`",
+        Seq(tree.Tag("tag",
+          Seq(tree.Argument.Named("key", "value"))))))
+  }
+
   test("Don't replace in code blocks") {
     val input = """```scala
 column[Ref[Supplier], Int]()
