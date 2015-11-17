@@ -250,7 +250,7 @@ object Markdown {
       if (chapters.last == chapter) None
       else Some(chapters(index + 1))
 
-    navigationHeader(meta, previous, next, meta.flatMap(_.editSourceURL)) +
+    navigationHeader(meta, previous, next, chapter.sourcePath) +
     writer.chapter.write(chapter) +
     this.footnotes(writer, footnotes)
   }
