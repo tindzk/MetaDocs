@@ -214,11 +214,11 @@ object Markdown {
       .foldLeft(Seq.empty[String]) { case (acc, cur) =>
         acc match {
           case Nil => Seq(cur)
-          case a => a ++ Seq(" | ", cur)
+          case a => a ++ Seq("  |  ", cur)
         }
       }
 
-    items + "\n\n"
+    items.mkString + "\n\n"
   }
 
   def `abstract`(meta: Option[Meta]): String =
