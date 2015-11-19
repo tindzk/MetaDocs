@@ -76,42 +76,44 @@ column[Ref[Supplier], Int]()
 
   test("Bold") {
     assertEquals(Pegdown.parse("**Hello**"),
-      Root(Paragraph(Bold(Text("Hello")))))
+      Root(None, Paragraph(Bold(Text("Hello")))))
   }
 
   test("Code") {
     assertEquals(Pegdown.parse("`code`"),
-      Root(Paragraph(Code(Text("code")))))
+      Root(None, Paragraph(Code(Text("code")))))
     assertEquals(Pegdown.parse("``code``"),
-      Root(Paragraph(Code(Text("code")))))
+      Root(None, Paragraph(Code(Text("code")))))
     assertEquals(Pegdown.parse("``Ref[_]``"),
-      Root(Paragraph(Code(Text("Ref[_]")))))
+      Root(None, Paragraph(Code(Text("Ref[_]")))))
   }
 
   test("Link") {
     assertEquals(Pegdown.parse("[Google](http://google.com/)"),
-      Root(Paragraph(Url("http://google.com/", Text("Google")))))
+      Root(None, Paragraph(Url("http://google.com/", Text("Google")))))
   }
 
   test("Jump") {
     assertEquals(Pegdown.parse("[Section](#section)"),
-      Root(Paragraph(Jump("section", Some("Section")))))
+      Root(None, Paragraph(Jump("section", Some("Section")))))
   }
 
   test("Jump without title") {
     assertEquals(Pegdown.parse("[#section]"),
-      Root(Paragraph(Jump("section", None))))
+      Root(None, Paragraph(Jump("section", None))))
   }
 
   test("Auto link") {
     assertEquals(Pegdown.parse("[autocommit](https://en.wikipedia.org/wiki/Autocommit)"),
-      Root(Paragraph(Url("https://en.wikipedia.org/wiki/Autocommit", Text("autocommit")))))
+      Root(None,
+        Paragraph(Url("https://en.wikipedia.org/wiki/Autocommit",
+          Text("autocommit")))))
   }
 
   test("Image (1)") {
     assertEquals(
       Pegdown.parse("![Traits](images/traits.png)"),
-      Root(Paragraph(
+      Root(None, Paragraph(
         Image("images/traits.png")
       )))
   }
@@ -120,7 +122,7 @@ column[Ref[Supplier], Int]()
     assertEquals(
       Pegdown.parseWithExtensions("![Traits](images/traits.png)",
         DefaultInstructionSet),
-      Root(Paragraph(
+      Root(None, Paragraph(
         Image("images/traits.png")
       )))
   }
@@ -129,7 +131,7 @@ column[Ref[Supplier], Int]()
     assertEquals(
       Pegdown.parseWithExtensions("a[footnote]{Foot`note`}b",
        DefaultInstructionSet),
-      Root(Paragraph(
+      Root(None, Paragraph(
         Text("a"),
         Footnote(None, Text("Foot`note`")),
         Text("b")
@@ -144,7 +146,7 @@ column[Ref[Supplier], Int]()
         |```
       """.stripMargin),
 
-      Root(
+      Root(None,
         Scala(code = Some("test()"))
       )
     )
@@ -157,9 +159,27 @@ column[Ref[Supplier], Int]()
         |* Item 2
       """.stripMargin),
 
-      Root(
+      Root(None,
         List(
           ListItem(Text("Item 1")),
+          ListItem(Text("Item 2"))
+        )
+      )
+    )
+  }
+
+  test("Nested list") {
+    assertEquals(Pegdown.parse(
+      """
+        |* Item 1
+        |    * Subitem 1
+        |* Item 2
+      """.stripMargin),
+
+      Root(None,
+        List(
+          ListItem(Text("Item 1"),
+            List(ListItem(Text("Subitem 1")))),
           ListItem(Text("Item 2"))
         )
       )
@@ -173,7 +193,7 @@ column[Ref[Supplier], Int]()
 |:-|:-|
 |l|r|"""),
 
-      Root(
+      Root(None,
         Table(
           Row(Column(Text("a")), Column(Text("b"))),
           Row(Column(Text("l")), Column(Text("r")))
@@ -191,9 +211,9 @@ column[Ref[Supplier], Int]()
         |Content 2
       """.stripMargin),
 
-      Root(
-        Chapter(None, "Chapter 1", Paragraph(Text("Content 1"))),
-        Chapter(None, "Chapter 2", Paragraph(Text("Content 2")))
+      Root(None,
+        Chapter(None, None, "Chapter 1", Paragraph(Text("Content 1"))),
+        Chapter(None, None, "Chapter 2", Paragraph(Text("Content 2")))
       )
     )
   }
@@ -211,13 +231,13 @@ column[Ref[Supplier], Int]()
         |Content 2
       """.stripMargin),
 
-      Root(
-        Chapter(None, "Chapter 1",
+      Root(None,
+        Chapter(None, None, "Chapter 1",
           Paragraph(Text("Content 1")),
           Section(None, "Section 1", Paragraph(Text("Subcontent 1"))),
           Section(None, "Section 2", Paragraph(Text("Subcontent 2")))
         ),
-        Chapter(None, "Chapter 2", Paragraph(Text("Content 2")))
+        Chapter(None, None, "Chapter 2", Paragraph(Text("Content 2")))
       )
     )
   }
@@ -225,7 +245,7 @@ column[Ref[Supplier], Int]()
   test("Quoted") {
     assertEquals(
       Pegdown.parse("\"test\""),
-      Root(Paragraph(Text("\"test\"")))
+      Root(None, Paragraph(Text("\"test\"")))
     )
   }
 
@@ -235,7 +255,7 @@ column[Ref[Supplier], Int]()
 > B
 > C"""),
 
-      Root(
+      Root(None,
         Quote(
           Paragraph(
             Text("A"),

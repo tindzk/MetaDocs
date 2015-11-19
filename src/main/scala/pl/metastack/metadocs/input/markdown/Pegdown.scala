@@ -169,8 +169,7 @@ object Pegdown {
   def visit(node: BulletListNode, conversion: Conversion): document.tree.Node =
     document.tree.List(
       node.getChildren
-        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*
-    )
+        .map(dispatch(_, conversion).asInstanceOf[document.tree.ListItem]): _*)
 
   def visit(node: OrderedListNode, conversion: Conversion): document.tree.Node =
     document.tree.List(
@@ -262,8 +261,15 @@ object Pegdown {
     }
 
   def superChildren(node: Node) =
-    node.getChildren.head.asInstanceOf[SuperNode].getChildren
+    node.getChildren.flatMap {
+      // BulletListNode is a child of SuperNode
+      case x if x.getClass == classOf[SuperNode] => x.getChildren
+      case x => Seq(x)
+    }
 
   def rootSuperChildren(node: Node) =
-    superChildren(node.getChildren.head.asInstanceOf[RootNode])
+    node.getChildren.flatMap {
+      case x: RootNode => superChildren(x)
+      case x => Seq(x)
+    }
 }
