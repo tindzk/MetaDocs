@@ -19,13 +19,16 @@ class Markdown(referenceUrl: String => String) {
   val table = StringWriter[tree.Table] { table =>
     val headerRowColumns = table.headerRow.children.map(headerColumn.write)
     val header = "| " + headerRowColumns.mkString(" | ") + " |"
+    val caption = table.caption.map { c =>
+      "[" + c.map(node.write) + "]"
+    }
 
     val body = table.children.zipWithIndex.map { case (row, index) =>
       val columns = row.children.map(bodyColumn.write)
       "| " + columns.mkString(" | ") + " |"
     }.mkString("\n")
 
-    header + "\n" + body
+    header + "\n" + body + caption.fold("")("\n" + _)
   }
 
   val jump = StringWriter[tree.Jump] { jump =>

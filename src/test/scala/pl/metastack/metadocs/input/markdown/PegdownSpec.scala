@@ -191,10 +191,12 @@ column[Ref[Supplier], Int]()
 """
 |a|b|
 |:-|:-|
-|l|r|"""),
+|l|r|
+[caption]"""),
 
       Root(None,
         Table(
+          Some(Seq(Text("caption"))),
           Row(Column(Text("a")), Column(Text("b"))),
           Row(Column(Text("l")), Column(Text("r")))
         )

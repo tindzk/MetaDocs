@@ -183,19 +183,24 @@ case object ListItem extends Instruction[document.tree.ListItem] {
 }
 
 case object Table extends Instruction[document.tree.Table] {
+  val caption = argument("caption", default = true)
+
   override val name = "table"
   override def documentNode(conversion: Conversion,
                             tag: tree.Tag): document.tree.Table = {
     val children = conversion.childrenOf(tag, Row)
 
+    val c = caption.getStringOpt(conversion, tag)
+      .map(x => Seq(document.tree.Text(x)))
+
     if (children.isEmpty) {
       conversion.errata.error("Table must have header", tag)
-      document.tree.Table(document.tree.Row())
+      document.tree.Table(c, document.tree.Row())
     } else {
       val headerRow = children.head
       val bodyRows = children.tail
 
-      document.tree.Table(headerRow, bodyRows: _*)
+      document.tree.Table(c, headerRow, bodyRows: _*)
     }
   }
 }

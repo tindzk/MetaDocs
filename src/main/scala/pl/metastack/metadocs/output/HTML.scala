@@ -29,8 +29,13 @@ class HTML(referenceUrl: String => String) {
       else htmlT"""<tr class="odd">$columns</tr>"""
     }
 
+    val caption = table.caption.fold[web.tree.Node](web.tree.Null) { case c =>
+      val nodes = c.map(node.write)
+      htmlT"<caption>$nodes</caption>"
+    }
+
     val body = htmlT"""<tbody>$bodyRows</tbody>"""
-    htmlT"<table>$header$body</table>"
+    htmlT"<table>$header$body$caption</table>"
   }
 
   val jump = WebWriter[tree.Jump] { jump =>

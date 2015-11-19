@@ -17,15 +17,20 @@ case class Row(children: Column*) extends Node {
   def updateChildren(children: Seq[Node]): Node = Row(children.asInstanceOf[Seq[Column]]: _*)
 }
 
-case class Table(headerRow: Row, children: Row*) extends Node {
+case class Table(caption: Option[Seq[Node]],
+                 headerRow: Row,
+                 children: Row*) extends Node {
   def block: Boolean = true
   def map(f: Node => Node): Node = f(
     f(Table(
+      caption.map(_.map(f)),
       f(headerRow).asInstanceOf[Row],
       children.map(_.map(f)).asInstanceOf[Seq[Row]]: _*)))
   def flatMap(f: Node => Seq[Node]): Seq[Node] =
     f(Table(
+      caption.map(_.flatMap(f)),
       f(headerRow).head.asInstanceOf[Row],
       children.flatMap(_.flatMap(f)).asInstanceOf[Seq[Row]]: _*))
-  def updateChildren(children: Seq[Node]): Node = Table(headerRow, children.asInstanceOf[Seq[Row]]: _*)
+  def updateChildren(children: Seq[Node]): Node =
+    Table(caption, headerRow, children.asInstanceOf[Seq[Row]]: _*)
 }

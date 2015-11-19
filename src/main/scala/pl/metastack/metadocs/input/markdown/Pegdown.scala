@@ -99,6 +99,11 @@ object Pegdown {
       document.tree.Row(columns: _*)
     }
 
+    val caption = node.getChildren.collectFirst {
+      case caption: TableCaptionNode =>
+        caption.getChildren.map(dispatch(_, conversion))
+    }
+
     val header = node.getChildren.collectFirst {
       case header: TableHeaderNode => processRow(header.getChildren.head)
     }
@@ -107,7 +112,7 @@ object Pegdown {
       case body: TableBodyNode => body.getChildren.map(processRow)
     }.flatten
 
-    document.tree.Table(header.get, body: _*)
+    document.tree.Table(caption, header.get, body: _*)
   }
 
   def visit(node: StrongEmphSuperNode, conversion: Conversion): document.tree.Node =
@@ -260,14 +265,14 @@ object Pegdown {
       case n => throw new RuntimeException(s"Unknown node '$n'")
     }
 
-  def superChildren(node: Node) =
+  def superChildren(node: Node): Seq[Node] =
     node.getChildren.flatMap {
       // BulletListNode is a child of SuperNode
       case x if x.getClass == classOf[SuperNode] => x.getChildren
       case x => Seq(x)
     }
 
-  def rootSuperChildren(node: Node) =
+  def rootSuperChildren(node: Node): Seq[Node] =
     node.getChildren.flatMap {
       case x: RootNode => superChildren(x)
       case x => Seq(x)
