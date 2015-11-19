@@ -215,7 +215,7 @@ object CodeProcessor {
 
   def runSection(`package`: Option[String],
                  fileName: String,
-                 sectionName: String): Option[Any] = {
+                 sectionName: String): Option[String] = {
     val className = `package`.map(_ + ".").getOrElse("") + fileName
     val classLoader = getClass.getClassLoader
     val companionClass = Try(Class.forName(className + "$", true, classLoader))
@@ -223,7 +223,9 @@ object CodeProcessor {
     val companion = companionClass.getField("MODULE$")
       .get(null)
       .asInstanceOf[SectionSupport]
-    companion.sectionResult(sectionName)
+
+    val result = companion.sectionResult(sectionName)
+    result.map(_.mkString("\n"))
   }
 
   /** Execute listings and embed their output */
@@ -242,7 +244,7 @@ object CodeProcessor {
               throw new RuntimeException(s"Scala listing $scala doesn't set a filename")
             )
             println(s"Executing listing: ${scala.value}")
-            runSection(`package`, fileName, scala.value).map(_.toString)
+            runSection(`package`, fileName, scala.value)
 
           case _ => None
         }

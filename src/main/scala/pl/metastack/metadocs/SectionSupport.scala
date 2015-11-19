@@ -4,16 +4,27 @@ package pl.metastack.metadocs
  * @author Matt Hicks <matt@outr.com>
  */
 trait SectionSupport {
-  private var sectionResults = Map.empty[String, Any]
+  private var printedLines = List.empty[String]
+  private var sectionResults = Map.empty[String, Seq[String]]
 
-  def sectionResult(name: String): Option[Any] = sectionResults.get(name)
+  protected def flush(): Seq[String] = {
+    val lines = printedLines
+    printedLines = List.empty
+    lines
+  }
+
+  def println(x: Any): Unit =
+    printedLines = printedLines ++ Seq(x.toString)
+
+  def sectionResult(name: String): Option[Seq[String]] =
+    sectionResults.get(name)
 
   protected def section[R](name: String)(f: => R): R = {
     try {
       val r = f
-      if (r != ()) {
-        sectionResults += name -> r
-      }
+      val flushed = flush()
+      if (flushed.nonEmpty) sectionResults += name -> flushed
+      else if (r != ()) sectionResults += name -> Seq(r.toString)
       r
     } catch {
       case t: Throwable =>
