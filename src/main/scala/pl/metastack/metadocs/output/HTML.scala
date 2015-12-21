@@ -52,7 +52,7 @@ class HTML(referenceUrl: String => String) {
   }
 
   val code = WebWriter[tree.Code] { code =>
-    htmlT"<code>${children(code)}</code>"
+    htmlT"""<span class="code">${children(code)}</span>"""
   }
 
   val subsection = WebWriter[tree.Subsection] { subsection =>
