@@ -4,7 +4,7 @@
 MetaDocs is a Scala library for generating documents.
 
 ## Features
-* Markup blanguage supporting arbitrary instructions
+* Markup language supporting arbitrary instructions
 * Custom instructions can be defined
 * Paragraphs are automatically detected
 * Scala code listings are executed and embedded
