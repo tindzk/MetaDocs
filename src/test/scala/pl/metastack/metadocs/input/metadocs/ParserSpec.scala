@@ -3,22 +3,23 @@ package pl.metastack.metadocs.input.metadocs
 import minitest._
 
 import fastparse.core
+import fastparse.core.Parsed
 
 object ParserSpec extends SimpleTestSuite {
   import Parser._  // Import all parser rules
 
   def checkRule[T](rule: core.Parser[T], input: String, output: T) {
     rule.parse(input) match {
-      case s: core.Result.Success[T] =>
+      case s: Parsed.Success[T] =>
         assertEquals(rule.parse(input).get.value, output)
-      case f: core.Result.Failure => fail(f.msg)
+      case f: Parsed.Failure => fail(f.msg)
     }
   }
 
   def shouldFail[T](rule: core.Parser[T], input: String) {
     rule.parse(input) match {
-      case s: core.Result.Success[T] => fail()
-      case f: core.Result.Failure =>
+      case s: Parsed.Success[T] => fail()
+      case f: Parsed.Failure =>
     }
   }
 

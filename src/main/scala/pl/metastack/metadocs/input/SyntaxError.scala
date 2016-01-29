@@ -1,6 +1,6 @@
 package pl.metastack.metadocs.input
 
-import fastparse.core.Result
+import fastparse.core.Parsed.Failure
 
 case class StackFrame(line: Int, column: Int, rule: String) {
   override def toString = s"$rule (line $line, column $column)"
@@ -21,14 +21,15 @@ case class SyntaxError(input: String,
 }
 
 object SyntaxError {
-  def fromFarseParse(f: Result.Failure): SyntaxError = {
-    val frames = f.traced.fullStack.map { frame =>
-      val lines = f.input.take(frame.index + 1).lines.toVector
+  def fromFarseParse(f: Failure): SyntaxError = {
+    val ctx = f.extra
+    val frames = ctx.traced.fullStack.map { frame =>
+      val lines = ctx.input.take(frame.index + 1).lines.toVector
       val line = lines.length
       val column = lines.last.length
       StackFrame(line, column, frame.parser.toString)
     }
 
-    SyntaxError(f.input, f.traced.expected, f.line, f.col, frames)
+    SyntaxError(ctx.input, ctx.traced.expected, ctx.line, ctx.col, frames)
   }
 }

@@ -1,5 +1,6 @@
 package pl.metastack.metadocs.input.metadocs
 
+import fastparse.core.Parsed
 import pl.metastack.metadocs.input.SyntaxError
 
 import fastparse.all._
@@ -51,7 +52,7 @@ object Parser {
 
   def parse(input: String): Either[SyntaxError, tree.Root] =
     root.parse(input) match {
-      case f: Result.Failure => Left(SyntaxError.fromFarseParse(f))
-      case s: Result.Success[tree.Root] => Right(s.get.value)
+      case f: Parsed.Failure => Left(SyntaxError.fromFarseParse(f))
+      case s: Parsed.Success[tree.Root] => Right(s.get.value)
     }
 }

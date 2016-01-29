@@ -27,12 +27,12 @@ pomExtra in Global := {
 }
 
 libraryDependencies ++= Seq(
-  "pl.metastack" %% "metaweb" % "0.1.2-SNAPSHOT",
-  "com.lihaoyi" %% "fastparse" % "0.3.1",
-  "joda-time" % "joda-time" % "2.8.2",
+  "pl.metastack" %% "metaweb" % "0.1.2",
+  "com.lihaoyi" %% "fastparse" % "0.3.4",
+  "joda-time" % "joda-time" % "2.9.2",
   "org.joda" % "joda-convert" % "1.8.1",
-  "org.pegdown" % "pegdown" % "1.5.0",
-  "org.monifu" %% "minitest" % "0.13" % "test"
+  "org.pegdown" % "pegdown" % "1.6.0",
+  "org.monifu" %% "minitest" % "0.14" % "test"
 )
 
 testFrameworks += new TestFramework("minitest.runner.Framework")
