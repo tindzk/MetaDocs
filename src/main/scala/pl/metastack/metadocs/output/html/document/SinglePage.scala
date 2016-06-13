@@ -9,7 +9,6 @@ import pl.metastack.metadocs.output.HTML
 import pl.metastack.metadocs.output.html.Components
 
 import pl.metastack.metaweb._
-import pl.metastack.{metaweb => web}
 
 object SinglePage {
   def write(root: tree.Root,
@@ -17,24 +16,23 @@ object SinglePage {
             outputPath: String,
             meta: Option[Meta],
             toc: Boolean,
-            tocDepth: Int = 3) {
+            tocDepth: Int = 3): Unit = {
     def referenceUrl(id: String) = s"#$id"
     val writer = new HTML(referenceUrl)
 
     val footnotes = Extractors.footnotes(root)
 
-    val body = web.tree.Container(Seq(
+    val body = Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
-      Components.`abstract`(meta),
-      writer.root.write(root),
-      Components.footnotes(writer, footnotes)
-    ))
+      Components.`abstract`(meta)
+    ).flatten ++ writer.root.write(root) ++
+      Components.footnotes(writer, footnotes).toSeq
 
-    val result = skeleton(meta, None, Components.bodyWrapper(body))
+    val result = skeleton(meta, None, Seq(Components.bodyWrapper(body)))
 
     FileUtils.printToFile(new File(outputPath)) { fw =>
-      fw.write(result.state.toHtml)
+      fw.write(result.toHtml)
     }
   }
 }

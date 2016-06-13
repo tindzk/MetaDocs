@@ -4,7 +4,7 @@ organization := "pl.metastack"
 
 version := "0.1.2-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 pomExtra in Global := {
   <url>https://github.com/MetaStack-pl/MetaDocs</url>
@@ -21,18 +21,18 @@ pomExtra in Global := {
     <developer>
     <id>tindzk</id>
     <name>Tim Nieradzik</name>
-    <url>http://github.com/tindzk/</url>
+    <url>http://github.com/tindzk</url>
     </developer>
   </developers>
 }
 
 libraryDependencies ++= Seq(
-  "pl.metastack" %% "metaweb" % "0.1.2",
-  "com.lihaoyi" %% "fastparse" % "0.3.4",
-  "joda-time" % "joda-time" % "2.9.2",
+  "pl.metastack" %% "metaweb" % "0.2.0",
+  "com.lihaoyi" %% "fastparse" % "0.3.7",
+  "joda-time" % "joda-time" % "2.9.4",
   "org.joda" % "joda-convert" % "1.8.1",
   "org.pegdown" % "pegdown" % "1.6.0",
-  "org.monifu" %% "minitest" % "0.14" % "test"
+  "io.monix" %% "minitest" % "0.22" % "test"
 )
 
 testFrameworks += new TestFramework("minitest.runner.Framework")

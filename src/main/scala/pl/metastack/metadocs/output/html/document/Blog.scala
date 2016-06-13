@@ -21,13 +21,11 @@ object Blog {
       node match {
         case tag @ tree.Post(_, id, date, title, description, children @ _*) =>
           val url = id.map(referenceUrl)
-          val descriptionT: web.tree.Node =
-            description.map(d => htmlT"<h2>$d</h2>")
-              .getOrElse(web.tree.Null)
+          val descriptionT = description.map(d => html"<h2>$d</h2>").toSeq
           val dateFmt = date.toString("MMM dd", meta.locale)
 
           Some(
-            htmlT"""
+            html"""
             <li>
               <a href=$url><aside class="dates">$dateFmt</aside></a>
               <a href=$url>$title $descriptionT</a>
@@ -38,7 +36,7 @@ object Blog {
       }
 
     val list = root.children.flatMap(iterate)
-    htmlT"""<ul id="post-list">$list</ul>"""
+    html"""<ul id="post-list">$list</ul>"""
   }
 
   def index(root: tree.Root,
@@ -46,17 +44,16 @@ object Blog {
             header: Option[web.tree.Node],
             bodyHeader: Option[web.tree.Node],
             footer: Option[web.tree.Node],
-            referenceUrl: String => String): web.tree.Node = {
-    val headerT: web.tree.Node = header.getOrElse(web.tree.Null)
-    val bodyHeaderT: web.tree.Node = bodyHeader.getOrElse(web.tree.Null)
+            referenceUrl: String => String): Seq[web.tree.Node] = {
+    val headerT = header.toSeq
+    val bodyHeaderT = bodyHeader.toSeq
     val content = postList(root, meta, referenceUrl)
-    val footerT: web.tree.Node = footer.map { ft =>
-      htmlT"""<footer class="clearfix" id="footer">$ft</footer>"""
-    }.getOrElse(web.tree.Null)
+    val footerT = footer.map { ft =>
+      html"""<footer class="clearfix" id="footer">$ft</footer>"""
+    }.toSeq
 
-    web.tree.Container(Seq(
-      headerT,
-      htmlT"""
+    headerT ++ Seq(
+      html"""
       <div id="wrapper">
         $bodyHeaderT
         <section class="home">
@@ -65,7 +62,7 @@ object Blog {
         </section>
       </div>
       """
-    ))
+    )
   }
 
   def post(writer: HTML,
@@ -73,17 +70,17 @@ object Blog {
            pageFooter: Option[web.tree.Node],
            header: Option[web.tree.Node],
            footer: Option[web.tree.Node],
-           post: tree.Post): web.tree.Node = {
+           post: tree.Post): Seq[web.tree.Node] = {
     val dateFmt = post.date.toString("MMMM MM, YYYY", meta.locale)
 
-    val avatarT: web.tree.Node = meta.avatar.map(src =>
-      htmlT"""<img class="avatar" src=$src />""").getOrElse(web.tree.Null)
-    val headerT = header.getOrElse(web.tree.Null)
-    val footerT = footer.getOrElse(web.tree.Null)
-    val pageFooterT: web.tree.Node = pageFooter.getOrElse(web.tree.Null)
+    val avatarT = meta.avatar.map(src =>
+      html"""<img class="avatar" src=$src />""").toSeq
+    val headerT = header.toSeq
+    val footerT = footer.toSeq
+    val pageFooterT = pageFooter.toSeq
 
     val body =
-      htmlT"""
+      html"""
       <article class="post">
         <header>
           <h1>${post.title}</h1>
@@ -96,11 +93,10 @@ object Blog {
       """
 
     val footnotes = Extractors.footnotes(post)
-    val footnotesT = Components.footnotes(writer, footnotes, hr = false)
+    val footnotesT = Components.footnotes(writer, footnotes, hr = false).toSeq
 
-    web.tree.Container(Seq(
-      headerT,
-      htmlT"""
+    headerT ++ Seq(
+      html"""
       <section id="wrapper" class="home">
         $body
         $footnotesT
@@ -115,14 +111,14 @@ object Blog {
         $pageFooterT
       </section>
       """
-    ))
+    )
   }
 
   def feed(meta: Meta, posts: Seq[tree.Post]): web.tree.Tag = {
     def encodePost(post: tree.Post): web.tree.Tag = {
       val date = post.date.toString("E, d MMM yyyy HH:mm:ss Z", meta.locale)
       val url = postUrl(meta, post)
-      htmlT"""
+      html"""
         <item>
           <title>${post.title}</title>
           <description>${post.description.getOrElse("")}</description>
@@ -137,7 +133,7 @@ object Blog {
 
     val feedUrl = s"${meta.url}posts.xml"
 
-    htmlT"""<?xml version="1.0" encoding="UTF-8"?>
+    html"""<?xml version="1.0" encoding="UTF-8"?>
       <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
         <channel>
           <title>${meta.title}</title>

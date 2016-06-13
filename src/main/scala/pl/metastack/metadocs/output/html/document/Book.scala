@@ -14,12 +14,12 @@ object Book {
   def index(root: tree.Root,
             meta: Option[Meta],
             tocDepth: Int,
-            referenceUrl: String => String) = {
-    val body = web.tree.Container(Seq(
+            referenceUrl: String => String): web.tree.Node = {
+    val body = Seq(
       Components.header(meta),
       Components.toc(root, tocDepth, referenceUrl),
       Components.`abstract`(meta)
-    ))
+    ).flatten
 
     Components.bodyWrapper(body)
   }
@@ -40,11 +40,11 @@ object Book {
       if (chapters.last == chapter) None
       else Some(chapters(index + 1))
 
-    val body = web.tree.Container(Seq(
+    val body = Seq(
       Components.navigationHeader(meta, previous, next, chapter.sourcePath),
       writer.chapter.write(chapter),
-      Components.footnotes(writer, footnotes)
-    ))
+      Components.footnotes(writer, footnotes).toSeq
+    ).flatten
 
     Components.bodyWrapper(body)
   }
@@ -71,14 +71,14 @@ object Book {
     val writer = new HTML(referenceUrl)
 
     val indexBody = index(root, meta, tocDepth, referenceUrl)
-    val indexResult = skeleton(meta, None, indexBody)
+    val indexResult = skeleton(meta, None, Seq(indexBody))
     Document.writeHtml(filePath, "index", indexResult)
 
     val chapters = Extractors.chapters(root)
 
     chapters.foreach { chapter =>
       val body = this.chapter(meta, writer, chapters, chapter)
-      val result = skeleton(meta, Some(chapter.title), body)
+      val result = skeleton(meta, Some(chapter.title), Seq(body))
       Document.writeHtml(filePath, chapter.id.get, result)
     }
   }

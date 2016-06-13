@@ -7,13 +7,13 @@ import pl.metastack.{metaweb => web}
 
 import scala.reflect.ClassTag
 
-trait WebWriter[N <: tree.Node] extends output.Writer[N, web.tree.Node]
+trait WebWriter[N <: tree.Node] extends output.Writer[N, Seq[web.tree.Node]]
 
 object WebWriter {
-  def apply[N <: tree.Node](f: N => web.tree.Node)
+  def apply[N <: tree.Node](f: N => Seq[web.tree.Node])
                            (implicit ct: ClassTag[N]): WebWriter[N] =
     new WebWriter[N] {
-      def write: PartialFunction[N, web.tree.Node] = {
+      def write: PartialFunction[N, Seq[web.tree.Node]] = {
         case node: N => f(node)
       }
     }
@@ -21,7 +21,7 @@ object WebWriter {
   def combine[N <: tree.Node](writer: WebWriter[N],
                               writers: WebWriter[N]*): WebWriter[N] =
     new WebWriter[N] {
-      def write: PartialFunction[N, web.tree.Node] =
+      def write: PartialFunction[N, Seq[web.tree.Node]] =
         writers.foldLeft(writer.write) { (acc, cur) =>
           acc.orElse(cur.write)
         }

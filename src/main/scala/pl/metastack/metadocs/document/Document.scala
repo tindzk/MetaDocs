@@ -108,7 +108,7 @@ object Document {
   def writeHtml(filePath: File, id: String, root: web.tree.Node) {
     import pl.metastack.metaweb._
     FileUtils.printToFile(new File(filePath, s"$id.html")) { fw =>
-      fw.write(root.state.toHtml)
+      fw.write(root.toHtml)
     }
   }
 
@@ -117,7 +117,7 @@ object Document {
     FileUtils.printToFile(new File(filePath, s"$id.xml")) { fw =>
       fw.write(
         """<?xml version="1.0" encoding="UTF-8"?>""" + "\n" +
-        root.state.toHtml
+        root.toHtml
       )
     }
   }
