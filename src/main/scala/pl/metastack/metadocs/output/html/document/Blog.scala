@@ -12,30 +12,35 @@ import pl.metastack.metadocs.output.html.Components
 import pl.metastack.metadocs.document.{Document, tree, Meta, Extractors}
 
 object Blog {
+  implicit def dateTimeOrdering: Ordering[DateTime] =
+    Ordering.fromLessThan(_ isBefore _)
+
   /** Absolute post URL */
   def postUrl(meta: Meta, post: tree.Post): String =
     s"${meta.url}${post.id.get}.html"
 
   def postList(root: tree.Root, meta: Meta, referenceUrl: String => String): web.tree.Node = {
-    def iterate(node: tree.Node): Option[web.tree.Node] =
+    def iterate(node: tree.Node): Option[tree.Post] =
       node match {
-        case tag @ tree.Post(_, id, date, title, description, children @ _*) =>
-          val url = id.map(referenceUrl)
-          val descriptionT = description.map(d => html"<h2>$d</h2>").toSeq
-          val dateFmt = date.toString("MMM dd", meta.locale)
-
-          Some(
-            html"""
-            <li>
-              <a href=$url><aside class="dates">$dateFmt</aside></a>
-              <a href=$url>$title $descriptionT</a>
-            </li>
-            """
-          )
-        case _ => None
+        case post: tree.Post => Some(post)
+        case _               => None
       }
 
     val list = root.children.flatMap(iterate)
+      .sortBy(_.date).reverse
+      .map { case tree.Post(_, id, date, title, description, children @ _*) =>
+        val url = id.map(referenceUrl)
+        val descriptionT = description.map(d => html"<h2>$d</h2>").toSeq
+        val dateFmt = date.toString("MMM dd", meta.locale)
+
+        html"""
+        <li>
+          <a href=$url><aside class="dates">$dateFmt</aside></a>
+          <a href=$url>$title $descriptionT</a>
+        </li>
+        """
+      }
+
     html"""<ul id="post-list">$list</ul>"""
   }
 
@@ -178,8 +183,6 @@ object Blog {
     val indexResult = skeleton(Some(meta), None, indexBody)
     Document.writeHtml(filePath, "index", indexResult)
 
-    implicit def dateTimeOrdering: Ordering[DateTime] =
-      Ordering.fromLessThan(_ isBefore _)
     val posts = Extractors.posts(root).sortBy(_.date).reverse
 
     posts.foreach { p =>
