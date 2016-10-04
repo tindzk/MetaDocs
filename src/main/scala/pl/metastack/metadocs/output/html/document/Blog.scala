@@ -71,7 +71,7 @@ object Blog {
            header: Option[web.tree.Node],
            footer: Option[web.tree.Node],
            post: tree.Post): Seq[web.tree.Node] = {
-    val dateFmt = post.date.toString("MMMM MM, YYYY", meta.locale)
+    val dateFmt = post.date.toString("MMMM dd, YYYY", meta.locale)
 
     val avatarT = meta.avatar.map(src =>
       html"""<img class="avatar" src=$src />""").toSeq
