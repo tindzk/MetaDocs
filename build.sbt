@@ -27,6 +27,7 @@ pomExtra in Global := {
 }
 
 libraryDependencies ++= Seq(
+  "com.lihaoyi" %% "sourcecode" % "0.1.3",
   "pl.metastack" %% "metaweb" % "0.2.0",
   "com.lihaoyi" %% "fastparse" % "0.4.3",
   "joda-time" % "joda-time" % "2.9.9",

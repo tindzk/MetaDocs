@@ -2,7 +2,6 @@ package pl.metastack.metadocs.input.metadocs
 
 import org.joda.time.format.DateTimeFormat
 
-import pl.metastack.metadocs.document.tree.ScalaType
 import pl.metastack.metadocs.{TextHelpers, document}
 
 case class ArgumentParser(name: String, default: Boolean) {
@@ -221,45 +220,18 @@ case object Column extends Instruction[document.tree.Column] {
     document.tree.Column(conversion.childrenOf(tag): _*)
 }
 
-case object Package extends Instruction[document.tree.Package] {
-  val value = argument("value", default = true)
-
-  override val name = "package"
-
-  override def documentNode(conversion: Conversion,
-                            tag: tree.Tag): document.tree.Package =
-    document.tree.Package(value.getString(conversion, tag))
-}
-
 case object Scala extends Instruction[document.tree.Scala] {
-  val `type` = argument("type", default = false)
-  val value = argument("value", default = false)
-  val file = argument("file", default = false)
-  val result = argument("result", default = false)
+  val blockRef = argument("block",  default = false)
+  val result   = argument("result", default = false)
 
   override val name = "scala"
 
   override def documentNode(conversion: Conversion,
-                            tag: tree.Tag): document.tree.Scala = {
+                            tag: tree.Tag): document.tree.Scala =
     document.tree.Scala(
-      `type`.getStringOpt(conversion, tag) match {
-        case None => ScalaType.Code
-        case Some("code") => ScalaType.Code
-        case Some("imports") => ScalaType.Imports
-        case Some("object") => ScalaType.Object
-        case Some("class") => ScalaType.Class
-        case Some("case class") => ScalaType.CaseClass
-        case Some("trait") => ScalaType.Trait
-        case Some("section") => ScalaType.Section
-        case Some(t) =>
-          conversion.errata.error(s"Scala type `$t` unknown", tag)
-          ScalaType.Code
-      },
-      value.getStringOpt(conversion, tag).getOrElse(""),
+      blockRef.getStringOpt(conversion, tag),
       Some(TextHelpers.reindent(tag.text)),
-      file.getStringOpt(conversion, tag),
       result.getStringOpt(conversion, tag))
-  }
 }
 
 case object Shell extends Instruction[document.tree.Shell] {
@@ -356,8 +328,7 @@ object BlogInstructionSet extends InstructionSet {
 }
 
 object CodeInstructionSet extends InstructionSet {
-  override val instructions: Set[Instruction[_]] = Set(Package, Scala, Shell,
-    Listing)
+  override val instructions: Set[Instruction[_]] = Set(Scala, Shell, Listing)
 }
 
 object DraftInstructionSet extends InstructionSet {

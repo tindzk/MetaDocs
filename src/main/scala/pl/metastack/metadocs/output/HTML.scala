@@ -77,10 +77,6 @@ class HTML(referenceUrl: String => String) {
     Seq(html"<ul>${children(list)}</ul>")
   }
 
-  val `package` = WebWriter[tree.Package] { `package` =>
-    Seq.empty
-  }
-
   val scala = WebWriter[tree.Scala] { scala =>
     val code = html"""<pre class="sourceCode scala"><code data-lang="scala">${scala.code.get}</code></pre>"""
     val result = scala.result.map { result =>
@@ -137,8 +133,8 @@ class HTML(referenceUrl: String => String) {
       table.asInstanceOf[WebWriter[tree.Node]],
       Seq(
         list, listItem, code, url, image, bold, italic, todo, shell, listing,
-        scala, `package`, chapter, section, subsection, paragraph, quote, text,
-        jump, footnote
+        scala, chapter, section, subsection, paragraph, quote, text, jump,
+        footnote
       ).map(_.asInstanceOf[WebWriter[tree.Node]]): _*)
 
   val root = WebWriter[tree.Root] { root =>
