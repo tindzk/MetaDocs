@@ -8,18 +8,18 @@ import fastparse.core.Parsed
 object ParserSpec extends SimpleTestSuite {
   import Parser._  // Import all parser rules
 
-  def checkRule[T](rule: core.Parser[T], input: String, output: T) {
+  def checkRule[T](rule: core.Parser[T, Char, String], input: String, output: T) {
     rule.parse(input) match {
-      case s: Parsed.Success[T] =>
+      case s: Parsed.Success[T, Char, String] =>
         assertEquals(rule.parse(input).get.value, output)
-      case f: Parsed.Failure => fail(f.msg)
+      case f: Parsed.Failure[Char, String] => fail(f.msg)
     }
   }
 
-  def shouldFail[T](rule: core.Parser[T], input: String) {
+  def shouldFail[T](rule: core.Parser[T, Char, String], input: String) {
     rule.parse(input) match {
-      case s: Parsed.Success[T] => fail()
-      case f: Parsed.Failure =>
+      case s: Parsed.Success[T, Char, String] => fail()
+      case f: Parsed.Failure[Char, String] =>
     }
   }
 
@@ -98,7 +98,6 @@ object ParserSpec extends SimpleTestSuite {
 
   test("Error handling") {
     val error = Parser.parse("\ntag[{}").left.get
-    assertEquals(error.line, 2)
-    assertEquals(error.column, 6)
+    assertEquals(error.position, "2:6")
   }
 }

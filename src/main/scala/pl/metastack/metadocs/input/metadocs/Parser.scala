@@ -52,7 +52,7 @@ object Parser {
 
   def parse(input: String): Either[SyntaxError, tree.Root] =
     root.parse(input) match {
-      case f: Parsed.Failure => Left(SyntaxError.fromFarseParse(f))
-      case s: Parsed.Success[tree.Root] => Right(s.get.value)
+      case f: Parsed.Failure[Char, String] => Left(SyntaxError.fromFarseParse(f))
+      case s: Parsed.Success[tree.Root, Char, String] => Right(s.get.value)
     }
 }
