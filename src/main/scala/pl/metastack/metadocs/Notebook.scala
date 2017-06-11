@@ -3,17 +3,11 @@ package pl.metastack.metadocs
 import java.io.File
 
 import scala.collection.mutable.ListBuffer
-import scala.io.BufferedSource
 
 case class Session(blocks: ListBuffer[Block] = ListBuffer.empty) {
-  private def readFile[T](file: File)(f: BufferedSource => T): T = {
-    val source = io.Source.fromFile(file)
-    try f(source) finally source.close()
-  }
-
-  def serialiseBlocks(): Map[String, BlockResult] = {
+  def serialiseBlocks(): Map[String, BlockResult] =
     blocks.map { b =>
-      val lines = readFile(new File(b.file))(_.getLines().toList)
+      val lines = FileUtils.readFile(new File(b.file))(_.getLines().toList)
       b.name ->
         BlockResult(
           TextHelpers.reindent(
@@ -22,7 +16,6 @@ case class Session(blocks: ListBuffer[Block] = ListBuffer.empty) {
           else Some(b.outputLines.map(_.value).mkString("\n"))
         )
     }.toMap
-  }
 }
 
 case class Line(value: String, `type`: String)

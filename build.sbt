@@ -1,3 +1,6 @@
+val Circe  = "0.8.0"
+val Http4s = "0.15.13"
+
 name := "MetaDocs"
 
 organization := "pl.metastack"
@@ -27,13 +30,20 @@ pomExtra in Global := {
 }
 
 libraryDependencies ++= Seq(
-  "com.lihaoyi" %% "sourcecode" % "0.1.3",
-  "pl.metastack" %% "metaweb" % "0.2.0",
-  "com.lihaoyi" %% "fastparse" % "0.4.3",
-  "joda-time" % "joda-time" % "2.9.9",
-  "org.joda" % "joda-convert" % "1.8.1",
-  "org.pegdown" % "pegdown" % "1.6.0",
-  "io.monix" %% "minitest" % "1.1.1" % "test"
+  "com.lihaoyi"      %% "sourcecode"          % "0.1.3",
+  "pl.metastack"     %% "metaweb"             % "0.2.0",
+  "com.lihaoyi"      %% "fastparse"           % "0.4.3",
+  "me.vican.jorge"   %% "stoml"               % "0.5-SNAPSHOT",
+  "com.github.scopt" %% "scopt"               % "3.6.0",
+  "io.circe"         %% "circe-core"          % Circe,
+  "io.circe"         %% "circe-generic"       % Circe,
+  "io.circe"         %% "circe-parser"        % Circe,
+  "org.http4s"       %% "http4s-dsl"          % Http4s,
+  "org.http4s"       %% "http4s-blaze-server" % Http4s,
+  "joda-time"        %  "joda-time"           % "2.9.9",
+  "org.joda"         %  "joda-convert"        % "1.8.1",
+  "org.pegdown"      %  "pegdown"             % "1.6.0",
+  "io.monix"         %% "minitest"            % "1.1.1" % "test"
 )
 
 testFrameworks += new TestFramework("minitest.runner.Framework")
@@ -43,3 +53,5 @@ enablePlugins(BuildInfoPlugin)
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
 
 buildInfoPackage := "pl.metastack.metadocs"
+
+assemblyJarName in assembly := "metadocs.jar"

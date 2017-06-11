@@ -5,7 +5,7 @@ import java.util.Locale
 import org.joda.time.DateTime
 
 case class Meta(
-  date: DateTime,
+  date: DateTime,  // TODO Should be optional, unless blog
   title: String,
   author: String,
   affiliation: String,
@@ -15,7 +15,7 @@ case class Meta(
   language: String,
 
   /* URL with trailing slash */
-  url: String,
+  url: String,  // TODO Should be optional
 
   /* URL to avatar */
   avatar: Option[String] = None,

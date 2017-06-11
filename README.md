@@ -16,6 +16,11 @@ MetaDocs is a Scala library for generating documents.
 * Document types: single-page, book, blog
 * HTML output is compatible with [Marked](http://marked2app.com/help/Writing_Custom_CSS.html) and [Jekyll](http://jekyllrb.com/) themes
 
+## Usage
+```bash
+$ sbt assembly
+```
+
 ## Links
 * [ScalaDoc](https://www.javadoc.io/doc/pl.metastack/metadocs_2.11/)
 
